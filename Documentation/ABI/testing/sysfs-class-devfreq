@@ -42,6 +42,7 @@ Description:
 		devfreq-provided central polling
 		(/sys/class/devfreq/.../central_polling is 0), this value
 		may be useless.
+<<<<<<< HEAD
 
 What:		/sys/class/devfreq/.../userspace/set_freq
 Date:		September 2011
@@ -50,3 +51,5 @@ Description:
 		The /sys/class/devfreq/.../userspace/set_freq shows and
 		sets the requested frequency for the devfreq object if
 		userspace governor is in effect.
+=======
+>>>>>>> 9005b65... PM / devfreq: Add common sysfs interfaces
