@@ -34,6 +34,11 @@
 #include <linux/mm.h>
 #include <linux/oom.h>
 #include <linux/sched.h>
+<<<<<<< HEAD
+=======
+#include <linux/rcupdate.h>
+#include <linux/profile.h>
+>>>>>>> 294b271... staging: android/lowmemorykiller: Don't grab tasklist_lock
 #include <linux/notifier.h>
 #include <linux/compaction.h>
 
@@ -134,7 +139,7 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 	}
 	selected_oom_adj = min_adj;
 
-	read_lock(&tasklist_lock);
+	rcu_read_lock();
 	for_each_process(p) {
 		struct mm_struct *mm;
 		struct signal_struct *sig;
@@ -176,15 +181,24 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 		lowmem_deathpending = selected;
 		lowmem_deathpending_timeout = jiffies + HZ;
 		task_handoff_register(&task_nb);
+<<<<<<< HEAD
 		force_sig(SIGKILL, selected);
+=======
+#endif
+		send_sig(SIGKILL, selected, 0);
+>>>>>>> 294b271... staging: android/lowmemorykiller: Don't grab tasklist_lock
 		rem -= selected_tasksize;
 	}
 	lowmem_print(4, "lowmem_shrink %lu, %x, return %d\n",
 		     sc->nr_to_scan, sc->gfp_mask, rem);
+<<<<<<< HEAD
 	read_unlock(&tasklist_lock);
 	rcu_read_unlock();
     if (selected)
         compact_nodes();
+=======
+	rcu_read_unlock();
+>>>>>>> 294b271... staging: android/lowmemorykiller: Don't grab tasklist_lock
 	return rem;
 }
 
