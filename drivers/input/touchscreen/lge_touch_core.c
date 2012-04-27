@@ -66,9 +66,6 @@ struct lge_touch_data
 	struct ghost_finger_ctrl	gf_ctrl;
 	struct jitter_filter_info	jitter_filter;
 	struct accuracy_filter_info	accuracy_filter;
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
-	u8				wait_first_touch_detected;
-#endif
 };
 
 struct touch_device_driver*	touch_device_func;
@@ -990,14 +987,6 @@ static void touch_work_func_a(struct work_struct *work)
 		goto err_out_critical;
 	}
 
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
-	if(ts->wait_first_touch_detected)
-	{
-		ts->wait_first_touch_detected = 0;
-		cpufreq_set_max_freq(NULL, LONG_MAX);
-		tegra_auto_hotplug_set_max_cpus(0);
-	}
-#endif
 
 	if(likely(ts->pdata->role->operation_mode == INTERRUPT_MODE))
 		int_pin = gpio_get_value(ts->pdata->int_pin);
@@ -1300,14 +1289,6 @@ static void touch_work_func_b(struct work_struct *work)
 		goto err_out_critical;
 	}
 
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
-	if(ts->wait_first_touch_detected)
-	{
-		ts->wait_first_touch_detected = 0;
-		cpufreq_set_max_freq(NULL, LONG_MAX);
-		tegra_auto_hotplug_set_max_cpus(0);
-	}
-#endif
 
 	if(likely(ts->pdata->role->operation_mode == INTERRUPT_MODE))
 		int_pin = gpio_get_value(ts->pdata->int_pin);
@@ -1615,15 +1596,6 @@ static void touch_work_func_c(struct work_struct *work)
 		TOUCH_ERR_MSG("get data fail\n");
 		goto err_out_critical;
 	}
-
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
-	if(ts->wait_first_touch_detected)
-	{
-		ts->wait_first_touch_detected = 0;
-		cpufreq_set_max_freq(NULL, LONG_MAX);
-		tegra_auto_hotplug_set_max_cpus(0);
-	}
-#endif
 
 	if(likely(ts->pdata->role->operation_mode == INTERRUPT_MODE))
 		int_pin = gpio_get_value(ts->pdata->int_pin);
@@ -2709,10 +2681,6 @@ static int touch_probe(struct i2c_client *client, const struct i2c_device_id *id
 
 	ts->client = client;
 	i2c_set_clientdata(client, ts);
-	
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
-	ts->wait_first_touch_detected = 0;
-#endif
 
 	/* Specific device probe */
 	if (touch_device_func->probe) {
@@ -2984,9 +2952,6 @@ static void touch_early_suspend(struct early_suspend *h)
 
 	touch_power_cntl(ts, ts->pdata->role->suspend_pwr);
 
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
-	ts->wait_first_touch_detected = 0;
-#endif
 }
 
 static void touch_late_resume(struct early_suspend *h)
@@ -3003,10 +2968,6 @@ static void touch_late_resume(struct early_suspend *h)
 	}
 
 	touch_power_cntl(ts, ts->pdata->role->resume_pwr);
-
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
-	ts->wait_first_touch_detected = 1;     
-#endif
 
 	if (ts->pdata->role->operation_mode)
 		enable_irq(ts->client->irq);

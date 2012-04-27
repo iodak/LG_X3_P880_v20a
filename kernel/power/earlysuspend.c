@@ -32,8 +32,7 @@
 #ifdef LGE_RESTRICT_POWER_DURING_SLEEP
 #include "../../drivers/misc/muic/muic.h"
 extern TYPE_CHARGING_MODE charging_mode;
-#define RESTRICTED_CLOCK	700000
-#define RESTRICTED_CORE		2
+#define RESTRICTED_CLOCK	416000
 #endif
 #define LGE_EARLYSUSPEND_DEBUG  1  //[20110131:geayoung.baek] suspend,resume monitoring
 
@@ -125,12 +124,10 @@ static void early_suspend(struct work_struct *work)
 #ifdef LGE_RESTRICT_POWER_DURING_SLEEP
 	if(charging_mode == CHARGING_NONE){
 		cpufreq_set_max_freq(NULL, RESTRICTED_CLOCK);
-		tegra_auto_hotplug_set_max_cpus(RESTRICTED_CORE);
 	}
 	else
 	{		
 		cpufreq_set_max_freq(NULL, LONG_MAX);
-		tegra_auto_hotplug_set_max_cpus(0);
 	}
 #endif
 	}
