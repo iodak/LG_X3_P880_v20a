@@ -39,7 +39,7 @@
 #include "cpu-tegra.h"
 #include "clock.h"
 
-#define INITIAL_STATE		TEGRA_CPQ_ENABLED
+#define INITIAL_STATE		TEGRA_CPQ_DISABLED
 #define UP_DELAY_MS		70
 #define DOWN_DELAY_MS		2000
 
@@ -298,6 +298,7 @@ static void __cpuinit __apply_core_config(void)
 
 static void __cpuinit tegra_cpuquiet_work_func(struct work_struct *work)
 {
+
 	int new_cluster, current_cluster, action;
 
 	mutex_lock(tegra_cpu_lock);
@@ -365,6 +366,7 @@ static int min_cpus_notify(struct notifier_block *nb, unsigned long n, void *p)
 	queue_work(cpuquiet_wq, &cpuquiet_work);
 
 	mutex_unlock(tegra_cpu_lock);
+
 
 	return NOTIFY_OK;
 }
@@ -503,6 +505,7 @@ static void delay_callback(struct cpuquiet_attribute *attr)
 static void enable_callback(struct cpuquiet_attribute *attr)
 {
 	int target_state = enable ? TEGRA_CPQ_ENABLED : TEGRA_CPQ_DISABLED;
+
 
 	mutex_lock(tegra_cpu_lock);
 
