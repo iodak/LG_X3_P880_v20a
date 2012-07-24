@@ -64,7 +64,10 @@ config ARCH_TEGRA_3x_SOC
 	select PCI_MSI if TEGRA_PCI
 	select ARM_ERRATA_754322
 	select ARM_ERRATA_764369 if SMP
-	select TEGRA_LP2_ARM_TWD if HAVE_ARM_TWD && !TEGRA_RAIL_OFF_MULTIPLE_CPUS
+	select ARM_ERRATA_764369
+	select PL310_ERRATA_769419 if CACHE_L2X0
+	select CPU_FREQ_TABLE if CPU_FREQ
+	select TEGRA_LP2_CPU_TIMER if HAVE_ARM_TWD && !TEGRA_RAIL_OFF_MULTIPLE_CPUS
 	select CPA
 	select ARCH_HAS_SUSPEND_PAGETABLE
 	select PL310_ERRATA_727915
@@ -582,7 +585,7 @@ config TEGRA_WDT_RECOVERY
 	  Enables watchdog recovery mechanism to protect against
 	  suspend/resume hangs.
 
-config TEGRA_LP2_ARM_TWD
+config TEGRA_LP2_CPU_TIMER
 	bool
 
 config TEGRA_RAIL_OFF_MULTIPLE_CPUS
