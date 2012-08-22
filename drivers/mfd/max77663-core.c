@@ -1586,15 +1586,13 @@ static int max77663_probe(struct i2c_client *client,
 
 	if (pdata == NULL) {
 		dev_err(&client->dev, "probe: Invalid platform_data\n");
-		ret = -ENODEV;
-		goto out;
+		return -ENODEV;
 	}
 
-	chip = kzalloc(sizeof(struct max77663_chip), GFP_KERNEL);
+	chip = devm_kzalloc(&client->dev, sizeof(*chip), GFP_KERNEL);
 	if (chip == NULL) {
 		dev_err(&client->dev, "probe: kzalloc() failed\n");
-		ret = -ENOMEM;
-		goto out;
+		return -ENOMEM;
 	}
 	max77663_chip = chip;
 
@@ -1660,8 +1658,6 @@ out_exit:
   */
 out_i2c_new_dummy:
 	max77663_chip = NULL;
-	kfree(chip);
-out:
 	return ret;
 }
 
@@ -1679,7 +1675,6 @@ static int __devexit max77663_remove(struct i2c_client *client)
   */
 	i2c_unregister_device(chip->i2c_rtc);
 	max77663_chip = NULL;
-	kfree(chip);
 
 	return 0;
 }
