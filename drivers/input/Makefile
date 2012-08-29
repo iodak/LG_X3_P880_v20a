@@ -30,3 +30,4 @@ obj-$(CONFIG_INPUT_KEYRESET)	+= keyreset.o
 obj-y	+= bthid/
 #--- BRCM : X3_BT_bringup - kukdong.bae@lge.com [E]
 
+obj-$(CONFIG_INPUT_CFBOOST)	+= input-cfboost.o
