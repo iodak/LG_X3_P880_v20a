@@ -160,6 +160,8 @@ struct gr3d_desc {
 	int (*prepare_poweroff)(struct nvhost_device *dev);
 	struct nvhost_hwctx_handler *(*alloc_hwctx_handler)(u32 syncpt,
 			u32 waitbase, struct nvhost_channel *ch);
+	int (*read_reg)(struct nvhost_device *dev, struct nvhost_channel *ch,
+			struct nvhost_hwctx *hwctx, u32 offset, u32 *value);
 };
 
 static const struct gr3d_desc gr3d[] = {
@@ -172,6 +174,7 @@ static const struct gr3d_desc gr3d[] = {
 		.deinit = NULL,
 		.prepare_poweroff = nvhost_gr3d_prepare_power_off,
 		.alloc_hwctx_handler = nvhost_gr3d_t20_ctxhandler_init,
+		.read_reg = nvhost_gr3d_t20_read_reg,
 	},
 	[gr3d_02] = {
 		.finalize_poweron = NULL,
@@ -182,6 +185,7 @@ static const struct gr3d_desc gr3d[] = {
 		.deinit = nvhost_scale3d_deinit,
 		.prepare_poweroff = nvhost_gr3d_prepare_power_off,
 		.alloc_hwctx_handler = nvhost_gr3d_t30_ctxhandler_init,
+		.read_reg = nvhost_gr3d_t20_read_reg,
 	},
 };
 
@@ -209,6 +213,7 @@ static int __devinit gr3d_probe(struct nvhost_device *dev,
 	drv->deinit			= gr3d[index].deinit;
 	drv->prepare_poweroff		= gr3d[index].prepare_poweroff;
 	drv->alloc_hwctx_handler	= gr3d[index].alloc_hwctx_handler;
+	drv->read_reg			= gr3d[index].read_reg;
 
 	return nvhost_client_device_init(dev);
 }

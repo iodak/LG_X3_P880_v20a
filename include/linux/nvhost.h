@@ -28,7 +28,7 @@
 #include <linux/devfreq.h>
 
 struct nvhost_master;
-
+struct nvhost_hwctx;
 struct nvhost_device_power_attr;
 
 #define NVHOST_MODULE_MAX_CLOCKS		3
@@ -188,6 +188,13 @@ struct nvhost_driver {
 	/* Clock gating callbacks */
 	int (*prepare_clockoff)(struct nvhost_device *dev);
 	void (*finalize_clockon)(struct nvhost_device *dev);
+
+	/* Read module register into memory */
+	int (*read_reg)(struct nvhost_device *dev,
+			struct nvhost_channel *ch,
+			struct nvhost_hwctx *hwctx,
+			u32 offset,
+			u32 *value);
 };
 
 extern int nvhost_driver_register(struct nvhost_driver *);
