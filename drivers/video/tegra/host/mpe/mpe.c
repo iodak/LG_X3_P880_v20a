@@ -18,6 +18,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <linux/slab.h>
+#include <linux/export.h>
+#include <linux/resource.h>
+#include <linux/module.h>
+#include <linux/scatterlist.h>
+
+#include <mach/iomap.h>
+#include <mach/hardware.h>
+
 #include "nvhost_hwctx.h"
 #include "nvhost_channel.h"
 #include "dev.h"
@@ -451,9 +460,10 @@ static struct nvhost_hwctx *ctxmpe_alloc(struct nvhost_hwctx_handler *h,
 	if (IS_ERR_OR_NULL(ctx->restore_virt))
 		goto fail_mmap;
 
-	ctx->restore_phys = mem_op().pin(memmgr, ctx->restore);
-	if (IS_ERR_VALUE(ctx->restore_phys))
+	ctx->restore_sgt = mem_op().pin(memmgr, ctx->restore);
+	if (IS_ERR_OR_NULL(ctx->restore_sgt))
 		goto fail_pin;
+	ctx->restore_phys = sg_dma_address(ctx->restore_sgt->sgl);
 
 	kref_init(&ctx->hwctx.ref);
 	ctx->hwctx.h = &p->h;
@@ -491,7 +501,7 @@ static void ctxmpe_free(struct kref *ref)
 
 	if (ctx->restore_virt)
 		mem_op().munmap(ctx->restore, ctx->restore_virt);
-	mem_op().unpin(memmgr, ctx->restore);
+	mem_op().unpin(memmgr, ctx->restore, ctx->restore_sgt);
 	mem_op().put(memmgr, ctx->restore);
 	kfree(ctx);
 }
@@ -567,9 +577,10 @@ struct nvhost_hwctx_handler *nvhost_mpe_ctxhandler_init(u32 syncpt,
 	if (IS_ERR_OR_NULL(save_ptr))
 		goto fail_mmap;
 
-	p->save_phys = mem_op().pin(memmgr, p->save_buf);
-	if (IS_ERR_VALUE(p->save_phys))
+	p->save_sgt = mem_op().pin(memmgr, p->save_buf);
+	if (IS_ERR_OR_NULL(p->save_sgt))
 		goto fail_pin;
+	p->save_phys = sg_dma_address(p->save_sgt->sgl);
 
 	setup_save(p, save_ptr);
 
