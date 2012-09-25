@@ -18,6 +18,7 @@
 #include <linux/err.h>
 #include <linux/types.h>
 #include <mach/dc.h>
+#include <trace/events/display.h>
 
 #include "dc_reg.h"
 #include "dc_config.h"
@@ -140,18 +141,15 @@ int tegra_dc_sync_windows(struct tegra_dc_win *windows[], int n)
 	if (!windows[0]->dc->enabled)
 		return -EFAULT;
 
+	trace_sync_windows(windows[0]->dc);
 #ifdef CONFIG_TEGRA_SIMULATION_PLATFORM
 	/* Don't want to timeout on simulator */
 	ret = wait_event_interruptible(windows[0]->dc->wq,
 		tegra_dc_windows_are_clean(windows, n));
 #else
-	trace_printk("%s:Before wait_event_interruptible_timeout\n",
-		windows[0]->dc->ndev->name);
 	ret = wait_event_interruptible_timeout(windows[0]->dc->wq,
 		tegra_dc_windows_are_clean(windows, n),
 		HZ);
-	trace_printk("%s:After wait_event_interruptible_timeout\n",
-		windows[0]->dc->ndev->name);
 #endif
 	return ret;
 }
@@ -214,6 +212,7 @@ int tegra_dc_update_windows(struct tegra_dc_win *windows[], int n)
 	int i;
 
 	dc = windows[0]->dc;
+	trace_update_windows(dc);
 
 	if (dc->out->flags & TEGRA_DC_OUT_ONE_SHOT_MODE) {
 		/* Acquire one_shot_lock to avoid race condition between
@@ -389,17 +388,7 @@ int tegra_dc_update_windows(struct tegra_dc_win *windows[], int n)
 
 		win->dirty = no_vsync ? 0 : 1;
 
-		dev_dbg(&dc->ndev->dev, "%s():idx=%d z=%d x=%d y=%d w=%d h=%d "
-			"out_x=%u out_y=%u out_w=%u out_h=%u "
-			"fmt=%d yuvp=%d Bpp=%u filter_h=%d filter_v=%d",
-			__func__, win->idx, win->z,
-			dfixed_trunc(win->x), dfixed_trunc(win->y),
-			dfixed_trunc(win->w), dfixed_trunc(win->h),
-			win->out_x, win->out_y, win->out_w, win->out_h,
-			win->fmt, yuvp, Bpp, filter_h, filter_v);
-		trace_printk("%s:win%u in:%ux%u out:%ux%u fmt=%d\n",
-			dc->ndev->name, win->idx, dfixed_trunc(win->w),
-			dfixed_trunc(win->h), win->out_w, win->out_h, win->fmt);
+		trace_window_update(dc, win);
 	}
 
 	if (update_blend) {
