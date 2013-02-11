@@ -1,7 +1,7 @@
 /*
  * arch/arm/mach-tegra/tegra3_throttle.c
  *
- * Copyright (c) 2011-2012, NVIDIA Corporation.
+ * Copyright (c) 2011-2013, NVIDIA Corporation.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include "cpu-tegra.h"
 #include "dvfs.h"
 
+/* cpu_throttle_lock is tegra_cpu_lock from cpu-tegra.c */
 static struct mutex *cpu_throttle_lock;
 static DEFINE_MUTEX(bthrot_list_lock);
 static LIST_HEAD(bthrot_list);
@@ -210,9 +211,7 @@ tegra_throttle_set_cur_state(struct thermal_cooling_device *cdev,
 	if (cur_state == 0) {
 		tegra_throttle_cap_freqs_update(0, 0, 0, 1);/* uncap freqs */
 
-		mutex_lock(cpu_throttle_lock);
 		tegra_cpu_set_speed_cap(NULL);
-		mutex_unlock(cpu_throttle_lock);
 	} else {
 		index = cur_state - 1;
 		tegra_throttle_cap_freqs_update(
@@ -225,9 +224,7 @@ tegra_throttle_set_cur_state(struct thermal_cooling_device *cdev,
 			bthrot->cpu_cap_freq =
 					bthrot->throt_tab[index].cpu_freq;
 
-			mutex_lock(cpu_throttle_lock);
 			tegra_cpu_set_speed_cap(NULL);
-			mutex_unlock(cpu_throttle_lock);
 		}
 	}
 

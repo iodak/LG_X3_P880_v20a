@@ -3,7 +3,7 @@
  *
  * CPU auto-hotplug for Tegra3 CPUs
  *
- * Copyright (c) 2011-2012, NVIDIA Corporation. All rights reserved.
+ * Copyright (c) 2011-2013, NVIDIA Corporation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@
 #define DOWN_DELAY_MS		2000
 #endif
 
+/* tegra3_cpu_lock is tegra_cpu_lock from cpu-tegra.c */
 static struct mutex *tegra3_cpu_lock;
 
 static struct workqueue_struct *hotplug_wq;
@@ -173,7 +174,7 @@ static int hp_state_set(const char *arg, const struct kernel_param *kp)
 				hp_init_stats();
 			}
 			/* catch-up with governor target speed */
-			tegra_cpu_set_speed_cap(NULL);
+			tegra_cpu_set_speed_cap_locked(NULL);
 		}
 	} else
 		pr_warn("%s: unable to set tegra hotplug state %s\n",
@@ -378,7 +379,7 @@ static void tegra_auto_hotplug_work_func(struct work_struct *work)
 				hp_stats_update(CONFIG_NR_CPUS, true);
 				hp_stats_update(0, false);
 				/* catch-up with governor target speed */
-				tegra_cpu_set_speed_cap(NULL);
+				tegra_cpu_set_speed_cap_locked(NULL);
 				break;
 			}
 		}
@@ -392,7 +393,7 @@ static void tegra_auto_hotplug_work_func(struct work_struct *work)
 				hp_stats_update(CONFIG_NR_CPUS, false);
 				hp_stats_update(0, true);
 				/* catch-up with governor target speed */
-				tegra_cpu_set_speed_cap(NULL);
+				tegra_cpu_set_speed_cap_locked(NULL);
 			}
 		} else {
 			switch (tegra_cpu_speed_balance()) {
@@ -456,7 +457,7 @@ static int min_cpus_notify(struct notifier_block *nb, unsigned long n, void *p)
 		}
 	}
 	/* update governor state machine */
-	tegra_cpu_set_speed_cap(NULL);
+	tegra_cpu_set_speed_cap_locked(NULL);
 	mutex_unlock(tegra3_cpu_lock);
 	return NOTIFY_OK;
 }
