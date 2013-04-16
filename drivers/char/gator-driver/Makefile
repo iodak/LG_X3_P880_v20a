@@ -1,6 +1,6 @@
 #CHADALYONG
-ANDROID_PATH = $(shell pwd)/../../../../../../
-GATOR_DRIVE_ROOT :=$(ANDROID_PATH)/kernel/drivers/char/gator-driver
+ANDROID_PATH = $(shell pwd)/
+GATOR_DRIVE_ROOT :=$(ANDROID_PATH)drivers/char/gator-driver
 #GATOR_KO :=~/nvidia/x3/android/out/target/product/x3/system/lib/modules
 ifneq ($(KERNELRELEASE),)
 
@@ -42,8 +42,8 @@ silent_chk_events.h = :
 gator_events.h: FORCE
 	@$($(quiet)chk_events.h)
 	$(Q)cd $(GATOR_DRIVE_ROOT) ;	$(CONFIG_SHELL) $(GATOR_DRIVE_ROOT)/gator_events.sh $@
-	mv $(GATOR_DRIVE_ROOT)/gator_events.h $(obj)/gator_events.h
-	cp $(GATOR_DRIVE_ROOT)/gatord ../../system/bin/gatord
+#	mv $(GATOR_DRIVE_ROOT)/gator_events.h $(obj)/gator_events.h
+#	cp $(GATOR_DRIVE_ROOT)/gatord ../../system/bin/gatord
 #	mv $(obj)/gator.ko ../../system/bin/gator.ko
 #	mv $(GATOR_KO)/gator.ko ../../system/bin/gator.ko
 #CHADALYONG
