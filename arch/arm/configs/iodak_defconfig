@@ -308,6 +308,10 @@ CONFIG_MACH_X3=y
 CONFIG_MACH_IFX=y
 # CONFIG_MACH_PEGASUS is not set
 
+#Own settings
+
+CONFIG_GPU_OVERCLOCK=y
+
 #
 # LGE LCD / Backlight Selection
 #
