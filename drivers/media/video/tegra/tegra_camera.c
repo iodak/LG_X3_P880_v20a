@@ -437,7 +437,7 @@ static int tegra_camera_clk_get(struct platform_device *pdev, const char *name,
 //#define POWER_SAVE_REC_CPU_USER_CAP_RATE	640000
 #define POWER_SAVE_BOOST_STEP			1
 #define POWER_SAVE_CPU_FREQ_MIN			640000
-#define POWER_SAVE_CPU_FREQ_MAX			640000
+#define POWER_SAVE_CPU_FREQ_MAX			1400000
 //#define POWER_SAVE_MIN_CPUS			2
 //#define POWER_SAVE_MAX_CPUS			2
 //                                                                                          
