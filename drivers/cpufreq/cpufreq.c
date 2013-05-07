@@ -672,6 +672,7 @@ static ssize_t show_bios_limit(struct cpufreq_policy *policy, char *buf)
 /*
  * Tegra3 voltage control via cpufreq by Paul Reioux (faux123)
  * inspired by Michael Huang's voltage control code for OMAP44xx
+ * Modded by iodak for p880 (X3)
  */
 
 #include "../../arch/arm/mach-tegra/dvfs.h"
@@ -689,9 +690,11 @@ static ssize_t show_UV_mV_table(struct cpufreq_policy *policy, char *buf)
 	i = cpu_clk_g->dvfs->num_freqs;
 
 	for(i--; i >=0; i--) {
+		if (cpu_clk_g->dvfs->freqs[i] != cpu_clk_g->dvfs->freqs[i-1]){
 		out += sprintf(out, "%lumhz: %i mV\n",
-				cpu_clk_g->dvfs->freqs[i]/1000000,
+				cpu_clk_g->dvfs->freqs[i]/1000000, //it will show cpu G freqs diferrent from freq table need fix
 				cpu_clk_g->dvfs->millivolts[i]);
+		}
 	}
 
 	return out - buf;
@@ -710,21 +713,23 @@ static ssize_t store_UV_mV_table(struct cpufreq_policy *policy, char *buf, size_
 	i = cpu_clk_g->dvfs->num_freqs;
 
 	for(i--; i >= 0; i--) {
-
-		if(cpu_clk_g->dvfs->freqs[i]/1000000 != 0) {
+		if (cpu_clk_g->dvfs->freqs[i] != cpu_clk_g->dvfs->freqs[i-1] &&
+		 cpu_clk_g->dvfs->freqs[i]/1000000 != 0){
 			ret = sscanf(buf, "%lu", &volt_cur);
 			if (ret != 1)
 				return -EINVAL;
 
-			/* TODO: need some robustness checks */
+			if (volt_cur >= 750 && volt_cur <= 1273){
 			user_mv_table[i] = volt_cur;
 			pr_info("user mv tbl[%i]: %lu\n", i, volt_cur);
-
+			}
 			/* Non-standard sysfs interface: advance buf */
 			ret = sscanf(buf, "%s", size_cur);
+			if (ret == 0)
+			return 0;
 			buf += (strlen(size_cur)+1);
+			}
 		}
-	}
 	/* update dvfs table here */
 	cpu_clk_g->dvfs->millivolts = user_mv_table;
 

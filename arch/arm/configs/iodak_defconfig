@@ -311,6 +311,7 @@ CONFIG_MACH_IFX=y
 #Own settings
 
 CONFIG_GPU_OVERCLOCK=y
+CONFIG_VOLTAGE_CONTROL=y
 
 #
 # LGE LCD / Backlight Selection

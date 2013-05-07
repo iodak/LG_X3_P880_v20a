@@ -34,8 +34,7 @@
 	750, 762, 775, 787, 800, 825, 837, 850, 862, 875, 887, 900, 912, 916, 925, 937, 950, 962, 975, 987, 1000, 1007, 1012, 1025, 1037, 1050, 1062, 1075, 1087, 1100, 1112, 1125, 1137, 1150, 1162, 1175, 1187, 1200, 1212, 1237};
 
 #ifdef CONFIG_VOLTAGE_CONTROL
-int user_mv_table[MAX_DVFS_FREQS] = {
-	800, 825, 850, 875, 900, 912, 975, 1000, 1025, 1050, 1075, 1100, 1125, 1150, 1175, 1200, 1212, 1237};
+int user_mv_table[MAX_DVFS_FREQS] = CPU_MILLIVOLTS;
 #endif
 
 
@@ -65,12 +64,13 @@ static int cpu_below_core = VDD_CPU_BELOW_VDD_CORE;
 
 static struct dvfs_rail tegra3_dvfs_rail_vdd_cpu = {
 	.reg_id = "vdd_cpu",
+
 #ifdef CONFIG_MACH_X3
-	.min_millivolts = 800,
+	.min_millivolts = 750, //800 stock
 #else
 	.min_millivolts = 725,
 #endif
-	.max_millivolts = 1300,
+	.max_millivolts = 1250,
 	.min_millivolts = 850,
 
 	.step = VDD_SAFE_STEP,
