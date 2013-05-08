@@ -429,6 +429,10 @@ config TEGRA_AUTO_HOTPLUG
 	  high/low power CPU clusters automatically, corresponding to
 	  CPU frequency scaling.
 
+config GPU_OVERCLOCK
+	bool "Enables overclock of gpu to 520Mhz"
+	default n
+
 config TEGRA_MC_EARLY_ACK
 	bool "Enable early acknowledgement from mermory controller"
 	depends on ARCH_TEGRA_3x_SOC
@@ -437,6 +441,8 @@ config TEGRA_MC_EARLY_ACK
 	  This option enables early acknowledgement from memory
 	  controller. This feature is used to improve CPU memory
 	  write performance.
+
+
 
 config TEGRA_MC_PROFILE
 	tristate "Enable profiling memory controller utilization"
