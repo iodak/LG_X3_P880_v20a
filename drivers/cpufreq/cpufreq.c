@@ -677,6 +677,7 @@ static ssize_t show_bios_limit(struct cpufreq_policy *policy, char *buf)
 
 #include "../../arch/arm/mach-tegra/dvfs.h"
 #include "../../arch/arm/mach-tegra/clock.h"
+#include "../../arch/arm/mach-tegra/fuse.h"
 
 extern int user_mv_table[MAX_DVFS_FREQS];
 
@@ -737,6 +738,23 @@ static ssize_t store_UV_mV_table(struct cpufreq_policy *policy, char *buf, size_
 }
 #endif
 
+static ssize_t show_tegra_cpu_variant(struct cpufreq_policy *policy, char *buf, size_t count)
+{
+	int cpu_process_id = tegra_cpu_process_id();
+	char *out = buf;
+
+	if (cpu_process_id == 1 || cpu_process_id == 0)
+	out += sprintf(out, "tegra_variant is %i, CPU is weak sorry :(\n",
+			cpu_process_id);
+	if (cpu_process_id == 3 || cpu_process_id == 2)
+	out += sprintf(out, "tegra_variant is %i, CPU is strong uhuuuu! :)\n",
+			cpu_process_id);
+	else
+	out += sprintf(out, "tegra_variant is %i\n",
+			cpu_process_id);
+}
+
+
 cpufreq_freq_attr_ro_perm(cpuinfo_cur_freq, 0400);
 cpufreq_freq_attr_ro(cpuinfo_min_freq);
 cpufreq_freq_attr_ro(cpuinfo_max_freq);
@@ -756,6 +774,7 @@ cpufreq_freq_attr_ro(policy_max_freq);
 #ifdef CONFIG_VOLTAGE_CONTROL
 cpufreq_freq_attr_rw(UV_mV_table);
 #endif
+cpufreq_freq_attr_ro(tegra_cpu_variant);
 
 static struct attribute *default_attrs[] = {
 	&cpuinfo_min_freq.attr,
@@ -774,6 +793,7 @@ static struct attribute *default_attrs[] = {
 #ifdef CONFIG_VOLTAGE_CONTROL
 	&UV_mV_table.attr,
 #endif
+	&tegra_cpu_variant.attr,
 	NULL
 };
 
