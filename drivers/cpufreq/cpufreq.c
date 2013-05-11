@@ -752,8 +752,20 @@ static ssize_t show_tegra_cpu_variant(struct cpufreq_policy *policy, char *buf, 
 	else
 	out += sprintf(out, "tegra_variant is %i\n",
 			cpu_process_id);
+	return out - buf;
 }
 
+static ssize_t show_gpu_cur_freq(struct cpufreq_policy *policy, char *buf, size_t count)
+{
+	struct clk *clk_3d = tegra_get_clock_by_name("3d");
+	struct clk *clk_2d = tegra_get_clock_by_name("2d");
+	char *out = buf;
+
+	out += sprintf(out, "3d: %lu MHz *** 2d: %lu MHz\n",
+				clk_get_rate(clk_3d) / 1000000,
+				clk_get_rate(clk_2d) / 1000000);
+	return out - buf;
+}
 
 cpufreq_freq_attr_ro_perm(cpuinfo_cur_freq, 0400);
 cpufreq_freq_attr_ro(cpuinfo_min_freq);
@@ -775,6 +787,7 @@ cpufreq_freq_attr_ro(policy_max_freq);
 cpufreq_freq_attr_rw(UV_mV_table);
 #endif
 cpufreq_freq_attr_ro(tegra_cpu_variant);
+cpufreq_freq_attr_ro(gpu_cur_freq);
 
 static struct attribute *default_attrs[] = {
 	&cpuinfo_min_freq.attr,
@@ -794,6 +807,7 @@ static struct attribute *default_attrs[] = {
 	&UV_mV_table.attr,
 #endif
 	&tegra_cpu_variant.attr,
+	&gpu_cur_freq.attr,
 	NULL
 };
 
