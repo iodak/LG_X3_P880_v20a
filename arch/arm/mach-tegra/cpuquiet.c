@@ -449,9 +449,93 @@ int tegra_auto_hotplug_init(struct mutex *cpu_lock)
 	return err;
 }
 
+static struct dentry *hp_debugfs_root;
+
+struct pm_qos_request_list min_cpu_req;
+struct pm_qos_request_list max_cpu_req;
+
+static int min_cpus_get(void *data, u64 *val)
+{
+	*val = pm_qos_request(PM_QOS_MIN_ONLINE_CPUS);
+	return 0;
+}
+static int min_cpus_set(void *data, u64 val)
+{
+	pm_qos_update_request(&min_cpu_req, (s32)val);
+	return 0;
+}
+DEFINE_SIMPLE_ATTRIBUTE(min_cpus_fops, min_cpus_get, min_cpus_set, "%llu\n");
+
+static int max_cpus_get(void *data, u64 *val)
+{
+	*val = pm_qos_request(PM_QOS_MAX_ONLINE_CPUS);
+	return 0;
+}
+static int max_cpus_set(void *data, u64 val)
+{
+	pm_qos_update_request(&max_cpu_req, (s32)val);
+	return 0;
+}
+DEFINE_SIMPLE_ATTRIBUTE(max_cpus_fops, max_cpus_get, max_cpus_set, "%llu\n");
+//                                                                          
+void tegra_auto_hotplug_set_min_cpus(int num_cpus)
+{
+	if (num_cpus < 0) {
+		pr_err("%s: invalid num_cpus=%d\n", __func__, num_cpus);
+		return;
+	}
+	min_cpus_set(NULL, num_cpus);
+}
+//                                                                          
+
+void tegra_auto_hotplug_set_max_cpus(int num_cpus)
+{
+	if (num_cpus < 0) {
+		pr_err("%s: invalid num_cpus=%d\n", __func__, num_cpus);
+		return;
+	}
+	max_cpus_set(NULL, num_cpus);
+}
+
+static int __init tegra_auto_hotplug_debug_init(void)
+{
+	if (!tegra3_cpu_lock)
+		return -ENOENT;
+
+	hp_debugfs_root = debugfs_create_dir("tegra_hotplug", NULL);
+	if (!hp_debugfs_root)
+		return -ENOMEM;
+
+	pm_qos_add_request(&min_cpu_req, PM_QOS_MIN_ONLINE_CPUS,
+			   PM_QOS_DEFAULT_VALUE);
+	pm_qos_add_request(&max_cpu_req, PM_QOS_MAX_ONLINE_CPUS,
+			   PM_QOS_DEFAULT_VALUE);
+
+	if (!debugfs_create_file(
+		"min_cpus", S_IRUGO, hp_debugfs_root, NULL, &min_cpus_fops))
+		goto err_out;
+
+	if (!debugfs_create_file(
+		"max_cpus", S_IRUGO, hp_debugfs_root, NULL, &max_cpus_fops))
+		goto err_out;
+
+	return 0;
+
+err_out:
+	debugfs_remove_recursive(hp_debugfs_root);
+	pm_qos_remove_request(&min_cpu_req);
+	pm_qos_remove_request(&max_cpu_req);
+	return -ENOMEM;
+}
+
+late_initcall(tegra_auto_hotplug_debug_init);
+
 void tegra_auto_hotplug_exit(void)
 {
 	destroy_workqueue(cpuquiet_wq);
         cpuquiet_unregister_driver(&tegra_cpuquiet_driver);
 	kobject_put(tegra_auto_sysfs_kobject);
+	debugfs_remove_recursive(hp_debugfs_root);
+	pm_qos_remove_request(&min_cpu_req);
+	pm_qos_remove_request(&max_cpu_req);
 }
