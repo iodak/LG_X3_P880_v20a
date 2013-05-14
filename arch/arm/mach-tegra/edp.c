@@ -32,6 +32,11 @@ static unsigned int regulator_cur;
 
 static const unsigned int *system_edp_limits;
 
+#ifdef CONFIG_CPU_OVERCLOCK
+int edpl0;
+int edpl123;
+#endif
+
 /*
  * Temperature step size cannot be less than 4C because of hysteresis
  * delta
@@ -323,6 +328,7 @@ static struct tegra_edp_limits edp_default_limits[] = {
 void __init tegra_init_cpu_edp_limits(unsigned int regulator_mA)
 {
 	int cpu_speedo_id = tegra_cpu_speedo_id();
+	int cpu_process_id = tegra_cpu_process_id();
 	int i, j;
 	struct tegra_edp_limits *e;
 	struct tegra_edp_entry *t = (struct tegra_edp_entry *)tegra_edp_map;
@@ -360,12 +366,42 @@ void __init tegra_init_cpu_edp_limits(unsigned int regulator_mA)
 		    GFP_KERNEL);
 	BUG_ON(!e);
 
+#ifdef CONFIG_CPU_OVERCLOCK
+  switch (cpu_process_id) {
+    case 0:
+      edpl0 = 10;
+      edpl123 = 10;
+      break;
+    case 1:
+      edpl0 = 10;
+      edpl123 = 20;
+      break;
+    case 2:
+      edpl0 = 20;
+      edpl123 = 20;
+      break;
+    case 3:
+    default:
+      edpl0 = 20;
+      edpl123 = 20;
+      break;
+}
+#endif
+
 	for (j = 0; j < edp_limits_size; j++) {
+#ifdef CONFIG_CPU_OVERCLOCK
+		e[j].temperature = (int)t[i+j].temperature;
+		e[j].freq_limits[0] = (unsigned int)(t[i+j].freq_limits[0]+edpl0) * 10000;
+		e[j].freq_limits[1] = (unsigned int)(t[i+j].freq_limits[1]+edpl123) * 10000;
+		e[j].freq_limits[2] = (unsigned int)(t[i+j].freq_limits[2]+edpl123) * 10000;
+		e[j].freq_limits[3] = (unsigned int)(t[i+j].freq_limits[3]+edpl123) * 10000;
+#else
 		e[j].temperature = (int)t[i+j].temperature;
 		e[j].freq_limits[0] = (unsigned int)t[i+j].freq_limits[0] * 10000;
 		e[j].freq_limits[1] = (unsigned int)(t[i+j].freq_limits[1]+10) * 10000;
 		e[j].freq_limits[2] = (unsigned int)(t[i+j].freq_limits[2]+10) * 10000;
 		e[j].freq_limits[3] = (unsigned int)(t[i+j].freq_limits[3]+10) * 10000;
+#endif
 	}
 
 	if (edp_limits != edp_default_limits)
