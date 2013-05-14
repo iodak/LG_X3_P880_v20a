@@ -48,6 +48,7 @@
 
 #include "muic.h"
 
+#include <linux/fastchg.h>
 
 
 //                                           
@@ -211,10 +212,17 @@ void set_max14526_muic_mode(unsigned char int_stat_value)
 			muic_mode = MUIC_MHL;
 			charging_mode = CHARGING_MHL;		//                                                      
 #endif
+#ifdef CONFIG_FORCE_FAST_CHARGE 
+		} else if ((int_stat_value & CHGDET) || (force_fast_charge != 0)) {
+			muic_i2c_write_byte(SW_CONTROL, COMP2_TO_HZ | COMN1_TO_HZ);
+			muic_mode = MUIC_LG_TA;
+			charging_mode = CHARGING_LG_TA;
+#else
 		} else if (int_stat_value & CHGDET) {
 			muic_i2c_write_byte(SW_CONTROL, COMP2_TO_HZ | COMN1_TO_HZ);
 			muic_mode = MUIC_LG_TA;
 			charging_mode = CHARGING_LG_TA;
+#endif
 		} else {
 			muic_i2c_write_byte(SW_CONTROL, COMP2_TO_HZ | COMN1_TO_C1COMP);
 
