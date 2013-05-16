@@ -29,6 +29,10 @@
 
 #include "power.h"
 
+#ifdef CONFIG_USR_FREQ_CORE
+#include <linux/fc_control.h>
+#endif
+
 #ifdef LGE_RESTRICT_POWER_DURING_SLEEP
 #include "../../drivers/misc/muic/muic.h"
 extern TYPE_CHARGING_MODE charging_mode;
@@ -36,6 +40,8 @@ extern TYPE_CHARGING_MODE charging_mode;
 #define RESTRICTED_CORE		2
 #endif
 #define LGE_EARLYSUSPEND_DEBUG  1  //[20110131:geayoung.baek] suspend,resume monitoring
+
+
 
 enum {
 	DEBUG_USER_STATE = 1U << 0,
@@ -122,6 +128,24 @@ static void early_suspend(struct work_struct *work)
 				pr_info("early_suspend: calling %pf\n", pos->suspend);
 			pos->suspend(pos);
 		}
+
+#ifdef CONFIG_USR_FREQ_CORE
+#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
+	if(charging_mode == CHARGING_NONE){
+		if(usr_freq == 0)
+		cpufreq_set_max_freq(NULL, RESTRICTED_CLOCK);
+		if(usr_core == 0)
+		tegra_auto_hotplug_set_max_cpus(RESTRICTED_CORE);
+	}
+	else 
+	{	
+		if(usr_freq == 0)	
+		cpufreq_set_max_freq(NULL, LONG_MAX);
+		if(usr_core == 0)
+		tegra_auto_hotplug_set_max_cpus(0);
+	}
+#endif
+#else
 #ifdef LGE_RESTRICT_POWER_DURING_SLEEP
 	if(charging_mode == CHARGING_NONE){
 		cpufreq_set_max_freq(NULL, RESTRICTED_CLOCK);
@@ -132,6 +156,7 @@ static void early_suspend(struct work_struct *work)
 		cpufreq_set_max_freq(NULL, LONG_MAX);
 		tegra_auto_hotplug_set_max_cpus(0);
 	}
+#endif
 #endif
 	}
 	mutex_unlock(&early_suspend_lock);

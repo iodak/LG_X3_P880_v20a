@@ -453,6 +453,14 @@ config FORCE_FAST_CHARGE
     	 A simple sysfs interface to force adapters that
     	 are detected as USB to charge as AC.
 
+config USR_FREQ_CORE
+	bool "Block drivers interfire in freqs and cores "
+	default y
+	help
+    	 A simple sysfs interface that will block drivers 
+	 that use core plugging or min or max freq settings for
+	 powersaving and other so user can set own settings.
+
 config TEGRA_MC_PROFILE
 	tristate "Enable profiling memory controller utilization"
 	default y
