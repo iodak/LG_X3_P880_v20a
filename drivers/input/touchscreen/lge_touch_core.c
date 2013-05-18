@@ -41,10 +41,6 @@
 
 #include <linux/input/lge_touch_core.h>
 
-#ifdef CONFIG_USR_FREQ_CORE
-#include <linux/fc_control.h>
-#endif
-
 struct lge_touch_data
 {
 	void*			h_touch;
@@ -993,18 +989,7 @@ static void touch_work_func_a(struct work_struct *work)
 		TOUCH_ERR_MSG("get data fail\n");
 		goto err_out_critical;
 	}
-#ifdef CONFIG_USR_FREQ_CORE
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
-	if(ts->wait_first_touch_detected)
-	{
-		ts->wait_first_touch_detected = 0;
-		if(usr_freq == 0)
-		cpufreq_set_max_freq(NULL, LONG_MAX);
-		if(usr_core == 0)
-		tegra_auto_hotplug_set_max_cpus(0);
-	}
-#endif
-#else
+
 #ifdef LGE_RESTRICT_POWER_DURING_SLEEP
 	if(ts->wait_first_touch_detected)
 	{
@@ -1012,7 +997,6 @@ static void touch_work_func_a(struct work_struct *work)
 		cpufreq_set_max_freq(NULL, LONG_MAX);
 		tegra_auto_hotplug_set_max_cpus(0);
 	}
-#endif
 #endif
 
 	if(likely(ts->pdata->role->operation_mode == INTERRUPT_MODE))
@@ -1316,18 +1300,6 @@ static void touch_work_func_b(struct work_struct *work)
 		goto err_out_critical;
 	}
 
-#ifdef CONFIG_USR_FREQ_CORE
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
-	if(ts->wait_first_touch_detected)
-	{
-		ts->wait_first_touch_detected = 0;
-		if(usr_freq == 0)
-		cpufreq_set_max_freq(NULL, LONG_MAX);
-		if(usr_core == 0)
-		tegra_auto_hotplug_set_max_cpus(0);
-	}
-#endif
-#else
 #ifdef LGE_RESTRICT_POWER_DURING_SLEEP
 	if(ts->wait_first_touch_detected)
 	{
@@ -1335,7 +1307,6 @@ static void touch_work_func_b(struct work_struct *work)
 		cpufreq_set_max_freq(NULL, LONG_MAX);
 		tegra_auto_hotplug_set_max_cpus(0);
 	}
-#endif
 #endif
 
 	if(likely(ts->pdata->role->operation_mode == INTERRUPT_MODE))
@@ -1645,18 +1616,6 @@ static void touch_work_func_c(struct work_struct *work)
 		goto err_out_critical;
 	}
 
-#ifdef CONFIG_USR_FREQ_CORE
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
-	if(ts->wait_first_touch_detected)
-	{
-		ts->wait_first_touch_detected = 0;
-		if(usr_freq == 0)
-		cpufreq_set_max_freq(NULL, LONG_MAX);
-		if(usr_core == 0)
-		tegra_auto_hotplug_set_max_cpus(0);
-	}
-#endif
-#else
 #ifdef LGE_RESTRICT_POWER_DURING_SLEEP
 	if(ts->wait_first_touch_detected)
 	{
@@ -1664,7 +1623,6 @@ static void touch_work_func_c(struct work_struct *work)
 		cpufreq_set_max_freq(NULL, LONG_MAX);
 		tegra_auto_hotplug_set_max_cpus(0);
 	}
-#endif
 #endif
 
 	if(likely(ts->pdata->role->operation_mode == INTERRUPT_MODE))

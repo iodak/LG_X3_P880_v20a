@@ -33,10 +33,6 @@
 
 #include <media/tegra_camera.h>
 
-#ifdef CONFIG_USR_FREQ_CORE
-#include <linux/fc_control.h>
-#endif
-
 /* Eventually this should handle all clock and reset calls for the isp, vi,
  * vi_sensor, and csi modules, replacing nvrm and nvos completely for camera
  */
@@ -444,84 +440,13 @@ static int tegra_camera_clk_get(struct platform_device *pdev, const char *name,
 #define POWER_SAVE_CPU_FREQ_MAX			640000
 //#define POWER_SAVE_MIN_CPUS			2
 //#define POWER_SAVE_MAX_CPUS			2
-//#define POWER_SAVE_CPU_FREQ_MAX			640000
+#define POWER_SAVE_CPU_FREQ_MAX			640000
 #define POWER_SAVE_MIN_CPUS			2
 #define POWER_SAVE_MAX_CPUS			2
+>>>>>>> parent of 7e30b36... removed LG core power save pluging for now
 //                                                                                          
 static unsigned long boost_step_default;
 
-#ifdef CONFIG_USR_FREQ_CORE
-static inline void tegra_camera_do_power_save(struct tegra_camera_dev *dev)
-{
-	int preview, rec;
-	
-    pr_info("%s \n", __func__);
-
-	preview = dev->power_save_preview;
-	rec = dev->power_save_rec;
-
-	if ((!dev->power_save) && (preview || rec)) {
-		boost_step_default = cpufreq_interactive_get_boost_step();
-		dev->power_save = true;
-	}
-
-	if (!dev->power_save)
-		return;
-
-	if (preview && rec) {    
-    pr_info("%s : when preview && rec \n", __func__);
-		if(usr_freq == 0){
-		cpufreq_interactive_set_boost_step(POWER_SAVE_BOOST_STEP);                                                                     
-		cpufreq_set_max_freq(NULL, POWER_SAVE_CPU_FREQ_MAX);
-		}
-		if ((dev->xres == 1280 && dev->yres == 720) ||
-			(dev->xres == 1440 && dev->yres == 1080) ||
-				(dev->xres == 1920 && dev->yres == 1080)) {
-			if(usr_freq == 0)
-			cpufreq_set_min_freq(NULL, POWER_SAVE_CPU_FREQ_MIN);
-			if(usr_core == 0){
-			tegra_auto_hotplug_set_min_cpus(POWER_SAVE_MIN_CPUS);
-			tegra_auto_hotplug_set_max_cpus(POWER_SAVE_MAX_CPUS);
-			}
-		}
-//                                                                                          
-	} else if (preview && !rec) {
-	  pr_info("%s : preview && !rec \n", __func__);
-		if(usr_freq == 0){
-		cpufreq_interactive_set_boost_step(POWER_SAVE_BOOST_STEP);
-//                                                                                          
-		#if 0 //kwanghee.choi 20120912 Vu1.0 Global fix the frame drop on Camera by setting full CPU clock(start)
-		cpufreq_set_min_freq(NULL, POWER_SAVE_CPU_FREQ_MIN);
-		cpufreq_set_max_freq(NULL, PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
-		tegra_auto_hotplug_set_min_cpus(0);
-		tegra_auto_hotplug_set_max_cpus(0);
-		#else
-		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
-		cpufreq_set_max_freq(NULL, PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
-		}
-		if(usr_freq == 0){
-		tegra_auto_hotplug_set_min_cpus(0);
-		tegra_auto_hotplug_set_max_cpus(0);
-		}
-		#endif //kwanghee.choi 20120912 Vu1.0 Global fix the frame drop on Camera by setting full CPU clock(end)
-//                                                                                          
-	} else if (!preview && !rec) {
-	  pr_info("%s : !preview && !rec \n", __func__);
-		if(usr_freq == 0){
-		cpufreq_interactive_set_boost_step(boost_step_default);                                                                       
-		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
-		cpufreq_set_max_freq(NULL, PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
-		}
-		if(usr_core == 0){
-		tegra_auto_hotplug_set_min_cpus(0);
-		tegra_auto_hotplug_set_max_cpus(0);
-		}
-//                                                                                          
-		dev->power_save = false;
-	}
-}
-
-#else
 static inline void tegra_camera_do_power_save(struct tegra_camera_dev *dev)
 {
 	int preview, rec;
@@ -532,10 +457,8 @@ static inline void tegra_camera_do_power_save(struct tegra_camera_dev *dev)
 	rec = dev->power_save_rec;
 
 	if (!dev->power_save && (preview || rec)) {
-		if(usr_freq == 0){
 		boost_step_default = cpufreq_interactive_get_boost_step();
 		dev->power_save = true;
-		}
 	}
 
 	if (!dev->power_save)
@@ -543,25 +466,20 @@ static inline void tegra_camera_do_power_save(struct tegra_camera_dev *dev)
 
 	if (preview && rec) {    
     pr_info("%s : when preview && rec \n", __func__);
-		if(usr_freq == 0){
-		cpufreq_interactive_set_boost_step(POWER_SAVE_BOOST_STEP);                                                                
+		cpufreq_interactive_set_boost_step(POWER_SAVE_BOOST_STEP);
+//                                                                                          
+		//                                                                      
 		cpufreq_set_max_freq(NULL, POWER_SAVE_CPU_FREQ_MAX);
-		}
 		if ((dev->xres == 1280 && dev->yres == 720) ||
 			(dev->xres == 1440 && dev->yres == 1080) ||
 				(dev->xres == 1920 && dev->yres == 1080)) {
-		if(usr_freq == 0){
 			cpufreq_set_min_freq(NULL, POWER_SAVE_CPU_FREQ_MIN);
-			}
-		if(usr_core == 0){
 			tegra_auto_hotplug_set_min_cpus(POWER_SAVE_MIN_CPUS);
 			tegra_auto_hotplug_set_max_cpus(POWER_SAVE_MAX_CPUS);
-			}
 		}
 //                                                                                          
 	} else if (preview && !rec) {
 	  pr_info("%s : preview && !rec \n", __func__);
-		if(usr_freq == 0){
 		cpufreq_interactive_set_boost_step(POWER_SAVE_BOOST_STEP);
 //                                                                                          
 		#if 0 //kwanghee.choi 20120912 Vu1.0 Global fix the frame drop on Camera by setting full CPU clock(start)
@@ -572,32 +490,22 @@ static inline void tegra_camera_do_power_save(struct tegra_camera_dev *dev)
 		#else
 		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 		cpufreq_set_max_freq(NULL, PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
-		}
-		if(usr_core == 0){
 		tegra_auto_hotplug_set_min_cpus(0);
 		tegra_auto_hotplug_set_max_cpus(0);
-		}
 		#endif //kwanghee.choi 20120912 Vu1.0 Global fix the frame drop on Camera by setting full CPU clock(end)
 //                                                                                          
 	} else if (!preview && !rec) {
 	  pr_info("%s : !preview && !rec \n", __func__);
-		if(usr_freq == 0){
 		cpufreq_interactive_set_boost_step(boost_step_default);
 //                                                                                          
 		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 		cpufreq_set_max_freq(NULL, PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
-		}
-		if(usr_core == 0){
 		tegra_auto_hotplug_set_min_cpus(0);
 		tegra_auto_hotplug_set_max_cpus(0);
-		}
-//                         
-		if(usr_freq == 0){                                                                 
+//                                                                                          
 		dev->power_save = false;
-		}
 	}
 }
-#endif
 
 //                                                                                          
 int tegra_camera_set_size(int xres, int yres)
