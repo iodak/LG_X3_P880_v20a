@@ -726,7 +726,7 @@ static ssize_t store_UV_mV_table(struct cpufreq_policy *policy, char *buf, size_
 			if (ret != 1)
 				return -EINVAL;
 
-			if (volt_cur >= 750 && volt_cur <= 1273){
+			if (volt_cur >= 725 && volt_cur <= 1273){
 			user_mv_table[i] = volt_cur;
 			pr_info("user mv tbl[%i]: %lu\n", i, volt_cur);
 			}
@@ -742,8 +742,55 @@ static ssize_t store_UV_mV_table(struct cpufreq_policy *policy, char *buf, size_
 
 	return count;
 }
+
+static ssize_t show_lp_UV_mV_table(struct cpufreq_policy *policy, char *buf)
+{
+
+	char *out = buf;
+	unsigned int freqs_lp [6]={51, 102, 204, 370, 475, 513}; //fake freqs
+	struct clk *cpu_clk_lp = tegra_get_clock_by_name("cpu_lp");
+	int i = cpu_clk_lp->dvfs->num_freqs-3;
+
+	for(i--; i >= 0; i--){
+		out += sprintf(out, "%imhz: %i mV\n", freqs_lp[i], cpu_clk_lp->dvfs->millivolts[i]);
+		}
+
+	return out - buf;
+}
+
+static ssize_t store_lp_UV_mV_table(struct cpufreq_policy *policy, char *buf, size_t count)
+{
+	int i;
+	struct clk *cpu_clk_lp = tegra_get_clock_by_name("cpu_lp");
+	struct clk *clk_emc = tegra_get_clock_by_name("emc");
+	unsigned long volt_cur[cpu_clk_lp->dvfs->num_freqs-3];
+	int ret = 0;
+	
+	ret = sscanf(buf, "%lu %lu %lu %lu %lu %lu", &volt_cur[5], &volt_cur[4], &volt_cur[3], &volt_cur[2], &volt_cur[1], &volt_cur[0]);
+
+	if (ret != 6)
+	return -EINVAL;
+	
+	for(i = 0; i < 6; i++){
+		if(volt_cur[i] < 900){
+		printk(KERN_DEBUG "lp_voltage_control: You set too low voltage (%lu) set min to 900mV\n", volt_cur[i]);
+		volt_cur[i] = 900;
+		}
+		if(volt_cur[i] > 1350){
+		printk(KERN_DEBUG "lp_voltage_control: You set too high voltage (%lu) set max to 1350mV\n", volt_cur[i]);
+		volt_cur[i] = 1350;
+		}
+
+		cpu_clk_lp->dvfs->millivolts[i] = volt_cur[i];
+		clk_emc->dvfs->millivolts[i] = volt_cur[i];
+		printk(KERN_DEBUG "lp_voltage_control: Voltages are set to: %i mV\n", cpu_clk_lp->dvfs->millivolts[i]);
+	}
+
+	return count;
+}
 #endif
 
+						
 #ifdef CONFIG_GPU_OVERCLOCK
 static ssize_t show_gpu_overclock(struct cpufreq_policy *policy, char *buf) {
 
@@ -912,6 +959,7 @@ cpufreq_freq_attr_ro(policy_min_freq);
 cpufreq_freq_attr_ro(policy_max_freq);
 #ifdef CONFIG_VOLTAGE_CONTROL
 cpufreq_freq_attr_rw(UV_mV_table);
+cpufreq_freq_attr_rw(lp_UV_mV_table);
 #endif
 #ifdef CONFIG_GPU_OVERCLOCK
 cpufreq_freq_attr_rw(gpu_overclock);
@@ -935,6 +983,7 @@ static struct attribute *default_attrs[] = {
 	&policy_max_freq.attr,
 #ifdef CONFIG_VOLTAGE_CONTROL
 	&UV_mV_table.attr,
+	&lp_UV_mV_table.attr,
 #endif
 #ifdef CONFIG_GPU_OVERCLOCK
 	&gpu_overclock.attr,
