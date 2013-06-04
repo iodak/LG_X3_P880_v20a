@@ -413,7 +413,7 @@ static struct tegra_dc_out_pin ssd2825_dc_out_pins[] = {
 	},
 };
 
-#if 0
+#if 1
 static struct tegra_dc_sd_settings x3_sd_settings = {
 	.enable = 1, /* Normal mode operation */
 	.use_auto_pwm = true,
@@ -586,7 +586,8 @@ int ssd2825_bridge_enable_queue(void)
 static struct tegra_dc_out x3_disp1_out = {
 	.align		= TEGRA_DC_ALIGN_MSB,
 	.order		= TEGRA_DC_ORDER_RED_BLUE,
-//                                                                       
+	.sd_settings  	= &x3_sd_settings,           
+//      	                                                     
 	.height 		= 105,//                                              
 	.width		= 59,//                                              
 
