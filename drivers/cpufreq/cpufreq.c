@@ -33,6 +33,15 @@
 
 #include <trace/events/power.h>
 
+#include "../../arch/arm/mach-tegra/dvfs.h"
+#include "../../arch/arm/mach-tegra/clock.h"
+#include "../../arch/arm/mach-tegra/fuse.h"
+
+#ifdef CONFIG_GPU_OVERCLOCK
+static DEFINE_MUTEX(dvfs_lock);
+#endif
+
+
 #define dprintk(msg...) cpufreq_debug_printk(CPUFREQ_DEBUG_CORE, \
 						"cpufreq-core", msg)
 
@@ -675,9 +684,6 @@ static ssize_t show_bios_limit(struct cpufreq_policy *policy, char *buf)
  * Modded by iodak for p880 (X3)
  */
 
-#include "../../arch/arm/mach-tegra/dvfs.h"
-#include "../../arch/arm/mach-tegra/clock.h"
-#include "../../arch/arm/mach-tegra/fuse.h"
 
 extern int user_mv_table[MAX_DVFS_FREQS];
 
@@ -738,6 +744,127 @@ static ssize_t store_UV_mV_table(struct cpufreq_policy *policy, char *buf, size_
 }
 #endif
 
+#ifdef CONFIG_GPU_OVERCLOCK
+static ssize_t show_gpu_overclock(struct cpufreq_policy *policy, char *buf) {
+
+	char *out = buf;
+  	struct clk *clk_3d = tegra_get_clock_by_name("3d");
+  	unsigned int i;
+
+	for(i = 0; i < 6; i++){
+		if (clk_3d->dvfs->freqs[i]/1000000 != 0)
+ 		out += sprintf(out, "%lu ",clk_3d->dvfs->freqs[i] / 1000000);
+		}
+
+	return out - buf;
+}
+
+static ssize_t store_gpu_overclock(struct cpufreq_policy *policy, const char *buf, size_t count)
+{
+
+	int ret;
+	struct clk *clk_vde = tegra_get_clock_by_name("vde");
+	struct clk *clk_mpe = tegra_get_clock_by_name("mpe");
+	struct clk *clk_2d = tegra_get_clock_by_name("2d");
+	struct clk *clk_epp = tegra_get_clock_by_name("epp");
+	struct clk *clk_3d = tegra_get_clock_by_name("3d");
+	struct clk *clk_3d2 = tegra_get_clock_by_name("3d2");
+	struct clk *clk_se = tegra_get_clock_by_name("se");
+	struct clk *clk_cbus = tegra_get_clock_by_name("cbus");
+	struct clk *clk_host1x = tegra_get_clock_by_name("host1x");
+	struct clk *clk_pll_c = tegra_get_clock_by_name("pll_c");
+	unsigned int i, v;
+	unsigned long freq_cur[6];
+	unsigned int stock_voltages[6]={950, 1000, 1050, 1100, 1150, 1200};
+
+	ret = sscanf(buf, "%lu %lu %lu %lu %lu %lu", &freq_cur[0], &freq_cur[1], &freq_cur[2], &freq_cur[3], &freq_cur[4], &freq_cur[5]);
+
+			if (ret != 6)
+				return -EINVAL;
+
+			for(i = 0; i < 6; i++) {
+			mutex_lock(&dvfs_lock);
+			if (freq_cur[i] < 200){
+				printk(KERN_DEBUG "GPU_OC: You set to low freq (%lu) set min to 200\n", freq_cur[i]);
+				freq_cur[i] = 200;
+				}
+			if (freq_cur[i] > 600){
+				printk(KERN_DEBUG "GPU_OC: You set to high freq (%lu) set max to 600\n", freq_cur[i]);
+				freq_cur[i] = 600;
+				}
+			if (freq_cur[i] > 520){
+				v = 1250; 
+				clk_vde->dvfs->millivolts[i] = v;
+				clk_mpe->dvfs->millivolts[i] = v;
+				clk_2d->dvfs->millivolts[i] = v;
+				clk_epp->dvfs->millivolts[i] = v;
+				clk_3d->dvfs->millivolts[i] = v;
+				clk_3d2->dvfs->millivolts[i] = v;
+				clk_se->dvfs->millivolts[i] = v;
+				clk_cbus->dvfs->millivolts[i] = v;
+				clk_host1x->dvfs->millivolts[i] = v;
+				clk_pll_c->dvfs->millivolts[i] = v;
+				printk(KERN_DEBUG "GPU_OC: Voltages are set to: %i mV for clock: %lu MHz\n", clk_3d->dvfs->millivolts[i], freq_cur[i] );
+				}
+			if (freq_cur[i] <= 520){
+				clk_vde->dvfs->millivolts[i] = stock_voltages[i];
+				clk_mpe->dvfs->millivolts[i] = stock_voltages[i];
+				clk_2d->dvfs->millivolts[i] = stock_voltages[i];
+				clk_epp->dvfs->millivolts[i] = stock_voltages[i];
+				clk_3d->dvfs->millivolts[i] = stock_voltages[i];
+				clk_3d2->dvfs->millivolts[i] = stock_voltages[i];
+				clk_se->dvfs->millivolts[i] = stock_voltages[i];
+				clk_cbus->dvfs->millivolts[i] = stock_voltages[i];
+				clk_host1x->dvfs->millivolts[i] = stock_voltages[i];
+				clk_pll_c->dvfs->millivolts[i] = stock_voltages[i];
+				printk(KERN_DEBUG "GPU_OC: Voltages are set to: %i mV for clock: %lu MHz\n", clk_3d->dvfs->millivolts[i], freq_cur[i] );
+				}
+				mutex_unlock(&dvfs_lock);
+			}
+			
+			clk_vde->max_rate = freq_cur[5]*1000000;
+			clk_mpe->max_rate = freq_cur[5]*1000000;
+			clk_2d->max_rate = freq_cur[5]*1000000;
+			clk_epp->max_rate = freq_cur[5]*1000000;
+			clk_3d->max_rate = freq_cur[5]*1000000;
+			clk_3d2->max_rate = freq_cur[5]*1000000;
+			clk_se->max_rate = freq_cur[5]*1000000;
+			clk_cbus->max_rate = freq_cur[5]*1000000;
+			clk_host1x->max_rate = DIV_ROUND_UP((freq_cur[5]*1000000), 2);
+			clk_pll_c->max_rate = freq_cur[5]*2000000;
+
+			for(i = 6; i < 9; i++) {
+			clk_vde->dvfs->freqs[i] = freq_cur[5]*1000000;  //need to set them to value of largest rate
+			clk_mpe->dvfs->freqs[i] = freq_cur[5]*1000000;  //or silence warning in dvfs.c
+			clk_2d->dvfs->freqs[i] = freq_cur[5]*1000000;
+			clk_epp->dvfs->freqs[i] = freq_cur[5]*1000000;
+			clk_3d->dvfs->freqs[i] = freq_cur[5]*1000000;
+			clk_3d2->dvfs->freqs[i] = freq_cur[5]*1000000;
+			clk_se->dvfs->freqs[i] = freq_cur[5]*1000000;
+			clk_cbus->dvfs->freqs[i] = freq_cur[5]*1000000;
+			clk_host1x->dvfs->freqs[i] = DIV_ROUND_UP((freq_cur[5]*1000000), 2);
+			clk_pll_c->dvfs->freqs[i] = freq_cur[5]*2000000;
+			}
+				
+			for(i = 0; i < 6; i++) {
+			mutex_lock(&dvfs_lock);
+			clk_vde->dvfs->freqs[i] = freq_cur[i]*1000000;
+			clk_mpe->dvfs->freqs[i] = freq_cur[i]*1000000;
+			clk_2d->dvfs->freqs[i] = freq_cur[i]*1000000;
+			clk_epp->dvfs->freqs[i] = freq_cur[i]*1000000;
+			clk_3d->dvfs->freqs[i] = freq_cur[i]*1000000;
+			clk_3d2->dvfs->freqs[i] = freq_cur[i]*1000000;
+			clk_se->dvfs->freqs[i] = freq_cur[i]*1000000;
+			clk_cbus->dvfs->freqs[i] = freq_cur[i]*1000000;
+			clk_host1x->dvfs->freqs[i] = DIV_ROUND_UP((freq_cur[i]*1000000), 2);
+			clk_pll_c->dvfs->freqs[i] = freq_cur[i]*2000000;
+			mutex_unlock(&dvfs_lock);
+			}
+
+	return count;
+}
+#endif
+
 static ssize_t show_tegra_cpu_variant(struct cpufreq_policy *policy, char *buf, size_t count)
 {
 	int cpu_process_id = tegra_cpu_process_id();
@@ -786,6 +913,9 @@ cpufreq_freq_attr_ro(policy_max_freq);
 #ifdef CONFIG_VOLTAGE_CONTROL
 cpufreq_freq_attr_rw(UV_mV_table);
 #endif
+#ifdef CONFIG_GPU_OVERCLOCK
+cpufreq_freq_attr_rw(gpu_overclock);
+#endif
 cpufreq_freq_attr_ro(tegra_cpu_variant);
 cpufreq_freq_attr_ro(gpu_cur_freq);
 
@@ -805,6 +935,9 @@ static struct attribute *default_attrs[] = {
 	&policy_max_freq.attr,
 #ifdef CONFIG_VOLTAGE_CONTROL
 	&UV_mV_table.attr,
+#endif
+#ifdef CONFIG_GPU_OVERCLOCK
+	&gpu_overclock.attr,
 #endif
 	&tegra_cpu_variant.attr,
 	&gpu_cur_freq.attr,
