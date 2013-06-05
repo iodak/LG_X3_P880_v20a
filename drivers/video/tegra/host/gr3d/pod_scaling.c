@@ -915,8 +915,10 @@ static int nvhost_pod_init(struct devfreq *df)
 			pr_err("%s: too many frequencies\n", __func__);
 			break;
 		}
-		rounded_rate =
-			clk_round_rate(clk_get_parent(d->clk[0]), rate);
+		rounded_rate = clk_round_rate(clk_get_parent(d->clk[0]), rate);
+		if (podgov->freq_count &&
+		    freqs[podgov->freq_count - 1] == rounded_rate)
+			break;
 		freqs[podgov->freq_count++] = rounded_rate;
 		rate = rounded_rate + 2000;
 	}
