@@ -136,7 +136,7 @@ static DEFINE_MUTEX(xmm_onoff_mutex);
 
 static struct workqueue_struct *workqueue_susp;
 static struct work_struct work_shortsusp, work_defaultsusp;
-static struct baseband_xmm_power_work_t *baseband_xmm_power_work_usb;
+//static struct baseband_xmm_power_work_t *baseband_xmm_power_work_usb;
 
 //Move place To_Ril-recovery Nvidia_Patch_20111226
 static struct baseband_xmm_power_work_t *baseband_xmm_power_work;
