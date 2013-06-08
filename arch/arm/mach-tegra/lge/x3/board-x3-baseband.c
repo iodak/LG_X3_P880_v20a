@@ -83,13 +83,13 @@ static struct platform_device tegra_baseband_power_device = {
 	},                                                               
 };                                                                      
                                                                         
-static struct platform_device tegra_baseband_power2_device = {          
-	.name = "baseband_xmm_power2",                                       
-	.id = -1,                                                        
-	.dev = {                                                         
-		.platform_data = &tegra_baseband_power_data,             
-	},                                                               
-};                                                 
+//static struct platform_device tegra_baseband_power2_device = {          
+//	.name = "baseband_xmm_power2",                                       
+//	.id = -1,                                                        
+//	.dev = {                                                         
+//		.platform_data = &tegra_baseband_power_data,             
+//	},                                                               
+//};                                                 
 
 static struct tegra_usb_phy_platform_ops hsic_imc_plat_ops = {
 	.post_suspend = x3_usb_hsic_postsuspend,
@@ -194,7 +194,7 @@ static int x3_usb_hsic_phy_off(void)
 struct platform_device *tegra_usb_hsic_host_register(void)
 {
 	struct platform_device *pdev;
-	void *platform_data;
+//	void *platform_data;
 	int val;
 
 	pdev = platform_device_alloc(tegra_ehci2_device.name,
@@ -293,7 +293,7 @@ int __init x3_baseband_init(void)
 		= &tegra_ehci_uhsic_pdata;
 	platform_device_register(&tegra_baseband_modem4_device);
 #else
-	int ret;
+//	int ret;
 	
 	printk("##@%s  \n", __func__ ) ;
 
