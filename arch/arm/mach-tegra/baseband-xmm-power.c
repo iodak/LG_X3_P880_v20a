@@ -1154,7 +1154,7 @@ static int baseband_xmm_power_pm_notifier_event(struct notifier_block *this,
 	return NOTIFY_DONE;
 }
 
-static int baseband_xmm_shutdown_function()
+static int baseband_xmm_shutdown_function(void)
 {
 	disable_irq(gpio_to_irq(baseband_power_driver_data->modem.xmm.ipc_ap_wake));
 	if ( l2_resume_work_done ) {
