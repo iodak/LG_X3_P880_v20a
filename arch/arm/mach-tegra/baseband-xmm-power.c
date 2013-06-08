@@ -122,7 +122,7 @@ static bool CP_initiated_L2toL0;
 static bool modem_power_on;
 static int power_onoff;
 //To_Ril-recovery Nvidia_Patch_20111226 [Start]
-static unsigned long XYZ = 4500 * 1000000 + 800 * 1000 + 500;
+//static unsigned long XYZ = 4500 * 1000000 + 800 * 1000 + 500;
 static int enum_repeat = ENUM_REPEAT_TRY_CNT;
 //To_Ril-recovery Nvidia_Patch_20111226 [End]
 
