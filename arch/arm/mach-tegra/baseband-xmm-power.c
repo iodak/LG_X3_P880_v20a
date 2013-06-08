@@ -858,7 +858,7 @@ static void baseband_xmm_power_flash_pm_ver_ge_1145_recovery
 {
 	int timeout_500ms = MODEM_ENUM_TIMEOUT_500MS;
 	int timeout_200ms = 0;
-	long err;
+	long err = 0;
 	
 	pr_debug("%s {\n", __func__);
 
