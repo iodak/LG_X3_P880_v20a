@@ -1523,6 +1523,8 @@ static int __init baseband_xmm_power_init(void)
 		pr_debug("%s\n", __func__);
 		return platform_driver_register(&baseband_power_driver);
 	}
+	
+	return 0;
 }
 
 static void __exit baseband_xmm_power_exit(void)
