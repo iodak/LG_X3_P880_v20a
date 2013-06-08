@@ -1168,6 +1168,8 @@ static int baseband_xmm_shutdown_function()
 	udelay(200);	
 	gpio_set_value(baseband_power_driver_data->modem.xmm.bb_rst, 0);
 	mdelay(20);
+
+	return 0;
 }
 
 
