@@ -782,7 +782,7 @@ static void baseband_xmm_power_L2_resume_work(struct work_struct *work)
 
 	if (!usbdev)
 	{
-		pr_debug("usbdev = %d\n",usbdev);
+		pr_debug("usbdev = %p\n",usbdev);
 		return;
 	}
 
