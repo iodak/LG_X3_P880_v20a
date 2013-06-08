@@ -543,7 +543,8 @@ irqreturn_t baseband_xmm_power_ipc_ap_wake_irq(int irq, void *dev_id)
 {
 	int value;
 	struct baseband_power_platform_data *data = baseband_power_driver_data;
-	
+	struct usb_interface *intf;
+
 	value = gpio_get_value(baseband_power_driver_data->modem.xmm.ipc_ap_wake);
 	pr_debug("%s g(%d), wake_st(%d)\n", __func__, value, ipc_ap_wake_state);
 
@@ -617,7 +618,6 @@ irqreturn_t baseband_xmm_power_ipc_ap_wake_irq(int irq, void *dev_id)
 			}
 			if (reenable_autosuspend && usbdev) {
 			      reenable_autosuspend = false;
-				struct usb_interface *intf;
 				intf = usb_ifnum_to_if(usbdev, 0);
 				if (usb_autopm_get_interface_async(intf) >= 0) {
 					pr_debug("get_interface_async succeeded"	" - call put_interface\n");
