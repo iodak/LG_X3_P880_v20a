@@ -1,0 +1,8 @@
+/dts-v1/;
+
+/include/ "tegra30.dtsi"
+
+/ {
+	model = "NVIDIA Tegra30 x3";
+	compatible = "nvidia,x3", "nvidia,tegra30";
+};
