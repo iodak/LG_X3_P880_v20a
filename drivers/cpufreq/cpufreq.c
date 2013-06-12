@@ -820,17 +820,20 @@ static ssize_t store_gpu_overclock(struct cpufreq_policy *policy, const char *bu
 	struct clk *clk_cbus = tegra_get_clock_by_name("cbus");
 	struct clk *clk_host1x = tegra_get_clock_by_name("host1x");
 	struct clk *clk_pll_c = tegra_get_clock_by_name("pll_c");
+	struct clk *shared_bus_user;
 	unsigned int i, v;
 	unsigned long freq_cur[6];
 	unsigned int stock_voltages[6]={950, 1000, 1050, 1100, 1150, 1200};
+	unsigned int stock_pll_freqs[6]={533000, 667000, 667000, 800000, 800000, 1066000};
 
 	ret = sscanf(buf, "%lu %lu %lu %lu %lu %lu", &freq_cur[0], &freq_cur[1], &freq_cur[2], &freq_cur[3], &freq_cur[4], &freq_cur[5]);
 
 			if (ret != 6)
 				return -EINVAL;
 
-			for(i = 0; i < 6; i++) {
 			mutex_lock(&dvfs_lock);
+
+			for(i = 0; i < 6; i++) {
 			if (freq_cur[i] < 200){
 				printk(KERN_DEBUG "GPU_OC: You set to low freq (%lu) set min to 200\n", freq_cur[i]);
 				freq_cur[i] = 200;
@@ -866,9 +869,9 @@ static ssize_t store_gpu_overclock(struct cpufreq_policy *policy, const char *bu
 				clk_pll_c->dvfs->millivolts[i] = stock_voltages[i];
 				printk(KERN_DEBUG "GPU_OC: Voltages are set to: %i mV for clock: %lu MHz\n", clk_3d->dvfs->millivolts[i], freq_cur[i] );
 				}
-				mutex_unlock(&dvfs_lock);
 			}
 			
+
 			clk_vde->max_rate = freq_cur[5]*1000000;
 			clk_mpe->max_rate = freq_cur[5]*1000000;
 			clk_2d->max_rate = freq_cur[5]*1000000;
@@ -879,6 +882,10 @@ static ssize_t store_gpu_overclock(struct cpufreq_policy *policy, const char *bu
 			clk_cbus->max_rate = freq_cur[5]*1000000;
 			clk_host1x->max_rate = DIV_ROUND_UP((freq_cur[5]*1000000), 2);
 			clk_pll_c->max_rate = freq_cur[5]*2000000;
+			list_for_each_entry(shared_bus_user, &clk_cbus->shared_bus_list, u.shared_bus_user.node) {
+			shared_bus_user->u.shared_bus_user.rate = clk_cbus->max_rate; 
+			shared_bus_user->max_rate = clk_cbus->max_rate; 
+			}
 
 			for(i = 6; i < 9; i++) {
 			clk_vde->dvfs->freqs[i] = freq_cur[5]*1000000;  //need to set them to value of largest rate
@@ -890,11 +897,13 @@ static ssize_t store_gpu_overclock(struct cpufreq_policy *policy, const char *bu
 			clk_se->dvfs->freqs[i] = freq_cur[5]*1000000;
 			clk_cbus->dvfs->freqs[i] = freq_cur[5]*1000000;
 			clk_host1x->dvfs->freqs[i] = DIV_ROUND_UP((freq_cur[5]*1000000), 2);
-			clk_pll_c->dvfs->freqs[i] = freq_cur[5]*2000000;
+			if(freq_cur[5]*2000000 <= stock_pll_freqs[5])
+				clk_pll_c->dvfs->freqs[i] = stock_pll_freqs[5];
+			else
+				clk_pll_c->dvfs->freqs[i] = freq_cur[5]*1000000;
 			}
 				
 			for(i = 0; i < 6; i++) {
-			mutex_lock(&dvfs_lock);
 			clk_vde->dvfs->freqs[i] = freq_cur[i]*1000000;
 			clk_mpe->dvfs->freqs[i] = freq_cur[i]*1000000;
 			clk_2d->dvfs->freqs[i] = freq_cur[i]*1000000;
@@ -904,9 +913,13 @@ static ssize_t store_gpu_overclock(struct cpufreq_policy *policy, const char *bu
 			clk_se->dvfs->freqs[i] = freq_cur[i]*1000000;
 			clk_cbus->dvfs->freqs[i] = freq_cur[i]*1000000;
 			clk_host1x->dvfs->freqs[i] = DIV_ROUND_UP((freq_cur[i]*1000000), 2);
-			clk_pll_c->dvfs->freqs[i] = freq_cur[i]*2000000;
-			mutex_unlock(&dvfs_lock);
+			if(freq_cur[i]*2000000 <= stock_pll_freqs[i])
+				clk_pll_c->dvfs->freqs[i] = stock_pll_freqs[i];
+			else
+				clk_pll_c->dvfs->freqs[i] = freq_cur[i]*1000000;
 			}
+
+			mutex_unlock(&dvfs_lock);
 
 	return count;
 }
