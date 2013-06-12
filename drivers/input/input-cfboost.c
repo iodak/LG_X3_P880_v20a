@@ -53,7 +53,7 @@ static struct work_struct boost;
 static struct delayed_work unboost;
 static unsigned int boost_freq; /* kHz */
 module_param(boost_freq, uint, 0644);
-static unsigned long boost_time = 500; /* ms */
+static unsigned long boost_time = 250; /* ms */
 module_param(boost_time, ulong, 0644);
 static struct workqueue_struct *cfb_wq;
 
