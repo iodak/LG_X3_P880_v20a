@@ -883,7 +883,6 @@ static ssize_t store_gpu_overclock(struct cpufreq_policy *policy, const char *bu
 			clk_host1x->max_rate = DIV_ROUND_UP((freq_cur[5]*1000000), 2);
 			clk_pll_c->max_rate = freq_cur[5]*2000000;
 			list_for_each_entry(shared_bus_user, &clk_cbus->shared_bus_list, u.shared_bus_user.node) {
-			shared_bus_user->u.shared_bus_user.rate = clk_cbus->max_rate; 
 			shared_bus_user->max_rate = clk_cbus->max_rate; 
 			}
 
