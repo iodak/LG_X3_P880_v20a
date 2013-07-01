@@ -55,7 +55,6 @@ obj-$(CONFIG_WL127X_RFKILL)	+= wl127x-rfkill.o
 obj-$(CONFIG_APANIC)		+= apanic.o
 obj-$(CONFIG_SENSORS_AK8975)	+= akm8975.o
 obj-$(CONFIG_SENSORS_NCT1008)	+= nct1008.o
-obj-$(CONFIG_FSYNC_CONTROL)	+= fsync_control.o
 # LG_BTUI : X3_BT_bringup - kukdong.bae@lge.com [S]
 obj-$(CONFIG_BCM4330_RFKILL)	+= lbee9qmb-rfkill.o
 obj-$(CONFIG_BD_ADDRESS)	+= bd_address.o
