@@ -97,7 +97,7 @@ static int status = 0;
 #ifdef CONFIG_LG_VIBE
 #define PWM_DUTY_DEFAULT              (PWM_PERIOD_DEFAULT >> 1) //50%
 #else
-#define PWM_DUTY_DEFAULT              (PWM_PERIOD_DEFAULT *.75 ) //75%
+#define PWM_DUTY_DEFAULT              (PWM_PERIOD_DEFAULT *1 ) //100%
 #endif 
 
 VibeUInt32 g_nPWM_Freq = PWM_PERIOD_DEFAULT;
