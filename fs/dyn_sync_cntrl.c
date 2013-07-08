@@ -45,7 +45,7 @@ static ssize_t dyn_fsync_active_show(struct kobject *kobj,
 static ssize_t dyn_fsync_active_store(struct kobject *kobj,
 		struct kobj_attribute *attr, const char *buf, size_t count)
 {
-	unsigned int data;
+	unsigned int data = 1;
 
 	if(sscanf(buf, "%u\n", &data) == 1) {
 		if (data == 1) {
