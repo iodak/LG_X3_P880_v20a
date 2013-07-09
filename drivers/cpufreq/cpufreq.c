@@ -726,7 +726,7 @@ static ssize_t store_UV_mV_table(struct cpufreq_policy *policy, char *buf, size_
 			if (ret != 1)
 				return -EINVAL;
 
-			if (volt_cur >= 725 && volt_cur <= 1273){
+			if (volt_cur >= 725 && volt_cur <= 1300){
 			user_mv_table[i] = volt_cur;
 			pr_info("user mv tbl[%i]: %lu\n", i, volt_cur);
 			}
@@ -1351,7 +1351,7 @@ static int cpufreq_add_dev(struct sys_device *sys_dev)
 		goto err_unlock_policy;
 	}
 	policy->user_policy.min = policy->min;
-	policy->user_policy.max = policy->max;
+	policy->user_policy.max = 1500000;
 
 	blocking_notifier_call_chain(&cpufreq_policy_notifier_list,
 				     CPUFREQ_START, policy);

@@ -369,21 +369,21 @@ void __init tegra_init_cpu_edp_limits(unsigned int regulator_mA)
 #ifdef CONFIG_CPU_OVERCLOCK
   switch (cpu_process_id) {
     case 0:
-      edpl0 = 10;
-      edpl123 = 10;
+      edpl0 = 20;
+      edpl123 = 30;
       break;
     case 1:
-      edpl0 = 10;
-      edpl123 = 20;
+      edpl0 = 20;
+      edpl123 = 30;
       break;
     case 2:
       edpl0 = 20;
-      edpl123 = 20;
+      edpl123 = 30;
       break;
     case 3:
     default:
       edpl0 = 20;
-      edpl123 = 20;
+      edpl123 = 30;
       break;
 }
 #endif
