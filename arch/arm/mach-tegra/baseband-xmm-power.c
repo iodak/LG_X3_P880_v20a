@@ -148,11 +148,12 @@ static void baseband_xmm_power_L2_resume(void);
 static int baseband_xmm_power_driver_handle_resume(struct baseband_power_platform_data *data);
 #define CP_RESET_SEQUENCE
 
-
+#if 0
 #define PR_TRACE(msg) do {\
 	pr_info("ARARARAGI " msg, __LINE__);\
 	dump_stack();\
 } while (0)
+#endif
 
 // Just disable the wake lock for now
 #define wake_lock(x)
@@ -472,10 +473,10 @@ void baseband_xmm_set_power_status(unsigned int status)
 		pr_debug("PM_ST : L0\n");
 		baseband_xmm_powerstate = status;
 		if (!wake_lock_active(&wakelock)) {
-			PR_TRACE("Acquire baseband_xmm_power wakelock line %d\n");
+//			PR_TRACE("Acquire baseband_xmm_power wakelock line %d\n");
 			wake_lock(&wakelock);
-		} else {
-			PR_TRACE("Already held baseband_xmm_power wakelock line %d\n");
+//		} else {
+//			PR_TRACE("Already held baseband_xmm_power wakelock line %d\n");
 		}
 		value = gpio_get_value(data->modem.xmm.ipc_hsic_active);
 		//pr_debug("GPIO [R]: before L0 Host_active = %d \n", value);
@@ -500,10 +501,10 @@ void baseband_xmm_set_power_status(unsigned int status)
 		} else {
 			spin_unlock_irqrestore(&xmm_lock, flags);
 			if (wake_lock_active(&wakelock)) {
-				PR_TRACE("Release baseband_xmm_power wakelock line %d\n");
+//				PR_TRACE("Release baseband_xmm_power wakelock line %d\n");
 				wake_unlock(&wakelock);
-			} else {
-				PR_TRACE("Already released baseband_xmm_power wakelock line %d\n");
+//			} else {
+//				PR_TRACE("Already released baseband_xmm_power wakelock line %d\n");
 			}
 			modem_sleep_flag = true;
 		}
@@ -529,11 +530,11 @@ void baseband_xmm_set_power_status(unsigned int status)
 		system_suspending = false;
 		spin_unlock_irqrestore(&xmm_lock, flags);
 		if (wake_lock_active(&wakelock)) {
-			PR_TRACE("Release baseband_xmm_power wakelock line %d\n");
+//			PR_TRACE("Release baseband_xmm_power wakelock line %d\n");
 			pr_debug("%s: releasing wakelock before L3\n", __func__);
 			wake_unlock(&wakelock);
-		} else {
-			PR_TRACE("Already released baseband_xmm_power wakelock line %d\n");
+//		} else {
+//			PR_TRACE("Already released baseband_xmm_power wakelock line %d\n");
 		}
 		gpio_set_value(data->modem.xmm.ipc_hsic_active, 0);
 		pr_debug("GPIO [W]: Host_active -> 0 \n");
@@ -751,10 +752,10 @@ static void baseband_xmm_power_L2_resume(void)
 
 	/* claim the wakelock here to avoid any system suspend */
 	if (!wake_lock_active(&wakelock)) {
-		PR_TRACE("Acquire baseband_xmm_power wakelock line %d\n");
+//		PR_TRACE("Acquire baseband_xmm_power wakelock line %d\n");
 		wake_lock(&wakelock);
-	} else {
-		PR_TRACE("Already held baseband_xmm_power wakelock line %d\n");
+//	} else {
+//		PR_TRACE("Already held baseband_xmm_power wakelock line %d\n");
 	}
 	modem_sleep_flag = false;
 	spin_lock_irqsave(&xmm_lock, flags);
@@ -1141,7 +1142,7 @@ static int baseband_xmm_power_pm_notifier_event(struct notifier_block *this,
 	case PM_SUSPEND_PREPARE:
 		pr_debug("%s : PM_SUSPEND_PREPARE\n", __func__);
 		if (wake_lock_active(&wakelock)) {
-			PR_TRACE("Not suspending because baseband_xmm_power wakelock active line %d\n");
+//			PR_TRACE("Not suspending because baseband_xmm_power wakelock active line %d\n");
 			pr_debug("%s: wakelock was active, aborting suspend\n",__func__);
 			return NOTIFY_STOP;
 		}
