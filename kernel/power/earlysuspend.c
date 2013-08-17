@@ -178,6 +178,7 @@ static void late_resume(struct work_struct *work)
 			pos->resume(pos);
 		}
 	}
+	cpufreq_set_max_freq(NULL, LONG_MAX);
 	if (debug_mask & DEBUG_SUSPEND)
 		pr_info("late_resume: done\n");
 abort:
