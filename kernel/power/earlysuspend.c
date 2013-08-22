@@ -29,7 +29,7 @@
 
 #include "power.h"
 
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
+#if 0
 #include "../../drivers/misc/muic/muic.h"
 extern TYPE_CHARGING_MODE charging_mode;
 #define RESTRICTED_CLOCK	416000
@@ -121,7 +121,7 @@ static void early_suspend(struct work_struct *work)
 				pr_info("early_suspend: calling %pf\n", pos->suspend);
 			pos->suspend(pos);
 		}
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
+#if 0
 	if(charging_mode == CHARGING_NONE){
 		cpufreq_set_max_freq(NULL, RESTRICTED_CLOCK);
 	}

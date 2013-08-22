@@ -66,7 +66,7 @@ struct lge_touch_data
 	struct ghost_finger_ctrl	gf_ctrl;
 	struct jitter_filter_info	jitter_filter;
 	struct accuracy_filter_info	accuracy_filter;
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
+#if 0
 	u8				wait_first_touch_detected;
 #endif
 };
@@ -1600,7 +1600,7 @@ static void touch_work_func_c(struct work_struct *work)
 		goto err_out_critical;
 	}
 
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
+#if 0
 	if(ts->wait_first_touch_detected)
 	{
 		ts->wait_first_touch_detected = 0;
@@ -2694,7 +2694,7 @@ static int touch_probe(struct i2c_client *client, const struct i2c_device_id *id
 	ts->client = client;
 	i2c_set_clientdata(client, ts);
 	
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
+#if 0
 	ts->wait_first_touch_detected = 0;
 #endif
 
@@ -2968,7 +2968,7 @@ static void touch_early_suspend(struct early_suspend *h)
 
 	touch_power_cntl(ts, ts->pdata->role->suspend_pwr);
 
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
+#if 0
 	ts->wait_first_touch_detected = 0;
 #endif
 }
@@ -2988,7 +2988,7 @@ static void touch_late_resume(struct early_suspend *h)
 
 	touch_power_cntl(ts, ts->pdata->role->resume_pwr);
 
-#ifdef LGE_RESTRICT_POWER_DURING_SLEEP
+#if 0
 	ts->wait_first_touch_detected = 1;     
 #endif
 

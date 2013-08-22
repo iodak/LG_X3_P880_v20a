@@ -43,6 +43,12 @@
 #include "cpu-tegra.h"
 #include "dvfs.h"
 
+#include <linux/pm_qos_params.h>
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
+#endif
+
 /* tegra throttling and edp governors require frequencies in the table
    to be in ascending order */
 static struct cpufreq_frequency_table *freq_table;
@@ -57,6 +63,9 @@ static bool is_suspended;
 static int suspend_index;
 
 static bool force_policy_max;
+
+#define RESTRICTED_CLOCK	475000
+unsigned int capped_screenoff = RESTRICTED_CLOCK;
 
 static int force_policy_max_set(const char *arg, const struct kernel_param *kp)
 {
@@ -638,15 +647,14 @@ _out:
 	return ret;
 }
 
-
 static int tegra_pm_notify(struct notifier_block *nb, unsigned long event,
 	void *dummy)
 {
-	printk("%s start [%d]\n", __func__, event);  //for debug
+	printk("%s start [%lu]\n", __func__, event);  //for debug
 	mutex_lock(&tegra_cpu_lock);
 	if (event == PM_SUSPEND_PREPARE) {
 		is_suspended = true;
-		pr_info("Tegra cpufreq suspend: setting frequency to %d kHz\n",
+		pr_info("Tegra cpufreq suspend: setting frequency to %u kHz\n",
 			freq_table[suspend_index].frequency);
 		tegra_update_cpu_speed(freq_table[suspend_index].frequency);
 		tegra_auto_hotplug_governor(
@@ -712,6 +720,35 @@ static int tegra_cpu_exit(struct cpufreq_policy *policy)
 	return 0;
 }
 
+static ssize_t show_screen_off_max_freq(struct cpufreq_policy *policy, char *buf)
+{
+	return sprintf(buf, "%u\n", capped_screenoff);
+}
+
+static ssize_t store_screen_off_max_freq(struct cpufreq_policy *policy,
+const char *buf, size_t count)
+{
+	int ret;
+	unsigned int freq;
+	ret = sscanf(buf, "%u", &freq);
+	if (ret != 1)
+		return -EINVAL;
+
+	if ((freq >= 51000) && (freq <= 1700000)){
+		capped_screenoff = freq;
+		pr_info("screen off max freq is = %u\n", freq);
+	}
+	else {
+		pr_info("screen off max freq must bu set from(51000 to 1700000)\n You set it to = %u\n", freq);
+		capped_screenoff = RESTRICTED_CLOCK;
+		freq = RESTRICTED_CLOCK;
+	}
+
+	return count;
+}
+
+cpufreq_freq_attr_rw(screen_off_max_freq);
+
 static int tegra_cpufreq_policy_notifier(
 	struct notifier_block *nb, unsigned long event, void *data)
 {
@@ -736,6 +773,7 @@ static struct freq_attr *tegra_cpufreq_attr[] = {
 #ifdef CONFIG_TEGRA_THERMAL_THROTTLE
 	&throttle,
 #endif
+	&screen_off_max_freq,
 	NULL,
 };
 
@@ -748,6 +786,25 @@ static struct cpufreq_driver tegra_cpufreq_driver = {
 	.name		= "tegra",
 	.attr		= tegra_cpufreq_attr,
 };
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
+
+static struct early_suspend tegra_cpufreq_early_suspender;
+
+static void tegra_cpufreq_early_suspend(struct early_suspend *h)
+{
+        pr_info("tegra_cpufreq_early_suspend: set screen off max to %u\n",
+                capped_screenoff);
+
+	cpufreq_set_max_freq(NULL, capped_screenoff);
+}
+static void tegra_cpufreq_late_resume(struct early_suspend *h)
+{
+        pr_info("tegra_cpufreq_late_resume: restore freq\n");
+	cpufreq_set_max_freq(NULL, LONG_MAX);
+}
+
+#endif
 
 static int __init tegra_cpufreq_init(void)
 {
@@ -775,6 +832,12 @@ static int __init tegra_cpufreq_init(void)
 		&tegra_cpufreq_policy_nb, CPUFREQ_POLICY_NOTIFIER);
 	if (ret)
 		return ret;
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	tegra_cpufreq_early_suspender.suspend = tegra_cpufreq_early_suspend;
+	tegra_cpufreq_early_suspender.resume = tegra_cpufreq_late_resume;
+	tegra_cpufreq_early_suspender.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN;
+	register_early_suspend(&tegra_cpufreq_early_suspender);
+#endif
 
 	return cpufreq_register_driver(&tegra_cpufreq_driver);
 }
@@ -784,6 +847,9 @@ static void __exit tegra_cpufreq_exit(void)
 	tegra_throttle_exit();
 	tegra_cpu_edp_exit();
 	tegra_auto_hotplug_exit();
+	#ifdef CONFIG_HAS_EARLYSUSPEND
+	unregister_early_suspend(&tegra_cpufreq_early_suspender);
+	#endif
 	cpufreq_unregister_driver(&tegra_cpufreq_driver);
 	cpufreq_unregister_notifier(
 		&tegra_cpufreq_policy_nb, CPUFREQ_POLICY_NOTIFIER);

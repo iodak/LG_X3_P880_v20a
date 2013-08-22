@@ -319,8 +319,8 @@
 //                    
 #ifdef CONFIG_MACH_X3
 #ifdef CONFIG_HAS_EARLYSUSPEND
-#define EARLY_SUSPEND_MIN_CPU_FREQ_IDX	0
-#define ACTIVE_MIN_CPU_FREQ_IDX		1
+#define EARLY_SUSPEND_MIN_CPU_FREQ	51000000
+#define ACTIVE_MIN_CPU_FREQ		102000000
 #define SCLK_MIN_FREQ			12000000
 static struct cpufreq_frequency_table *selected_cpufreq_table;
 #else
@@ -5334,11 +5334,9 @@ static void tegra3_clk_early_suspend(struct early_suspend *h)
 	if (clk_disp1)
 		clk_disable(clk_disp1);
 
-	cpu_clk_lp->min_rate =
-		selected_cpufreq_table[EARLY_SUSPEND_MIN_CPU_FREQ_IDX]
-		.frequency * 1000;
+	cpu_clk_lp->min_rate = EARLY_SUSPEND_MIN_CPU_FREQ;
 
-    pr_info("%s: min_rate = %d\n", __func__, cpu_clk_lp->min_rate);
+    pr_info("%s: min_rate = %lu\n", __func__, cpu_clk_lp->min_rate);
 }
 
 static void tegra3_clk_late_resume(struct early_suspend *h)
@@ -5349,11 +5347,9 @@ static void tegra3_clk_late_resume(struct early_suspend *h)
 	if (clk_disp1)
 		clk_enable(clk_disp1);
 
-	cpu_clk_lp->min_rate =
-		selected_cpufreq_table[ACTIVE_MIN_CPU_FREQ_IDX]
-		.frequency * 1000;
+	cpu_clk_lp->min_rate = ACTIVE_MIN_CPU_FREQ;
 
-    pr_info("%s: min_rate = %d\n", __func__, cpu_clk_lp->min_rate);
+    pr_info("%s: min_rate = %lu\n", __func__, cpu_clk_lp->min_rate);
 }
 #endif
 
