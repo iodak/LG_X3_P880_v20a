@@ -361,8 +361,8 @@ static int tegra_camera_open(struct inode *inode, struct file *file)
 						misc_dev);
 	int ret = 0;
 
-	prev_cpus = pm_qos_request(PM_QOS_MAX_ONLINE_CPUS);
-	pr_info("[CAMERA] prev_cpus = %i \n", prev_cpus);
+//	prev_cpus = pm_qos_request(PM_QOS_MAX_ONLINE_CPUS);
+//	pr_info("[CAMERA] prev_cpus = %i \n", prev_cpus);
 
 	dev_info(dev->dev, "%s\n", __func__);
 
@@ -460,28 +460,28 @@ static inline void tegra_camera_do_power_save(struct tegra_camera_dev *dev)
 	if (!preview && rec) {
 		if (dev->xres >= 1280 && dev->yres >= 720){
 			cpufreq_set_min_freq(NULL, POWER_SAVE_CPU_FREQ_MIN);
-			tegra_auto_hotplug_set_min_cpus(POWER_SAVE_MIN_CPUS);
-			tegra_auto_hotplug_set_max_cpus(0);
+//			tegra_auto_hotplug_set_min_cpus(POWER_SAVE_MIN_CPUS);
+//			tegra_auto_hotplug_set_max_cpus(0);
 			}
 		else {
 			cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 			cpufreq_set_max_freq(NULL, POWER_SAVE_CPU_FREQ_MAX);
-			tegra_auto_hotplug_set_min_cpus(0);
-			tegra_auto_hotplug_set_max_cpus(POWER_SAVE_MAX_CPUS);
+//			tegra_auto_hotplug_set_min_cpus(0);
+//			tegra_auto_hotplug_set_max_cpus(POWER_SAVE_MAX_CPUS);
 			}
 			                                                                                          
 	} else if (preview && !rec) {
 	  	pr_info("%s : preview && !rec \n", __func__);                                                       
 		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 		cpufreq_set_max_freq(NULL, POWER_SAVE_CPU_FREQ_MAX);
-		tegra_auto_hotplug_set_min_cpus(0);
-		tegra_auto_hotplug_set_max_cpus(POWER_SAVE_MAX_CPUS);                                                            
+//		tegra_auto_hotplug_set_min_cpus(0);
+//		tegra_auto_hotplug_set_max_cpus(POWER_SAVE_MAX_CPUS);                                                            
 	} else if (!preview && !rec) {
 	  pr_info("%s : !preview && !rec \n", __func__);
 		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 		cpufreq_set_max_freq(NULL, PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
-		tegra_auto_hotplug_set_min_cpus(0);
-		tegra_auto_hotplug_set_max_cpus(prev_cpus);
+//		tegra_auto_hotplug_set_min_cpus(0);
+//		tegra_auto_hotplug_set_max_cpus(prev_cpus);
 		pr_info("[CAMERA] End of power save prev_cpus = %i \n", prev_cpus);
 		dev->power_save = false;
 	}
