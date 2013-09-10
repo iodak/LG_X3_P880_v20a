@@ -57,7 +57,7 @@ static inline void tegra_throttling_enable(bool enable)
 int tegra_auto_hotplug_init(struct mutex *cpulock);
 void tegra_auto_hotplug_exit(void);
 void tegra_auto_hotplug_governor(unsigned int cpu_freq, bool suspend);
-long tegra_get_cur_skin_temp();
+long tegra_get_cur_skin_temp(void);
 #else
 static inline int tegra_auto_hotplug_init(struct mutex *cpu_lock)
 { return 0; }
