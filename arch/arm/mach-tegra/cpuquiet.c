@@ -156,13 +156,10 @@ static int update_core_config(unsigned int cpunumber, bool up)
 	int ret = 0;
 	unsigned int nr_cpus = num_online_cpus();
 
-	mutex_lock(tegra_cpu_lock);
-
-	if (cpq_state == TEGRA_CPQ_DISABLED || cpunumber >= nr_cpu_ids) {
-		mutex_unlock(tegra_cpu_lock);
+	if (cpq_state == TEGRA_CPQ_DISABLED || cpunumber >= nr_cpu_ids)
 		return -EINVAL;
-	}
 
+	mutex_lock(tegra_cpu_lock);
 
 	if (up) {
 		cpumask_set_cpu(cpunumber, &cr_online_requests);
@@ -325,8 +322,8 @@ static void __cpuinit tegra_cpuquiet_work_func(struct work_struct *work)
 	}
 
 	if (action == TEGRA_CPQ_DISABLED) {
-		cpq_state = TEGRA_CPQ_DISABLED;
 		mutex_unlock(tegra_cpu_lock);
+		cpq_state = TEGRA_CPQ_DISABLED;
 		cpuquiet_device_busy();
 		pr_info("Tegra cpuquiet clusterswitch disabled\n");
 		wake_up_interruptible(&wait_enable);
