@@ -39,9 +39,6 @@
 #include <linux/export.h>
 #include <linux/slab.h>
 
-#define CREATE_TRACE_POINTS
-#include <trace/events/nvhost_podgov.h>
-
 #include <mach/clk.h>
 #include <mach/hardware.h>
 
@@ -50,6 +47,10 @@
 #include "scale3d.h"
 #include "pod_scaling.h"
 #include "dev.h"
+
+#define CREATE_TRACE_POINTS
+#include <trace/events/nvhost_podgov.h>
+
 
 /* time frame for load and hint tracking - when events come in at a larger
  * interval, this probably indicates the current estimates are stale
