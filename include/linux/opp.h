@@ -97,7 +97,7 @@ static inline int opp_disable(struct device *dev, unsigned long freq)
 	return 0;
 }
 
-struct srcu_notifier_head *opp_get_notifier(struct device *dev)
+static inline struct srcu_notifier_head *opp_get_notifier(struct device *dev)
 {
 	return ERR_PTR(-EINVAL);
 }

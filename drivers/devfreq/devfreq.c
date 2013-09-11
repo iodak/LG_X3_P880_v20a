@@ -81,6 +81,7 @@ int update_devfreq(struct devfreq *devfreq)
 {
 	unsigned long freq;
 	int err = 0;
+	u32 flags = 0;
 
 	if (!mutex_is_locked(&devfreq->lock)) {
 		WARN(true, "devfreq->lock must be locked by the caller.\n");
@@ -92,7 +93,7 @@ int update_devfreq(struct devfreq *devfreq)
 	if (err)
 		return err;
 
-	err = devfreq->profile->target(devfreq->dev.parent, &freq);
+	err = devfreq->profile->target(devfreq->dev.parent, &freq, flags);
 	if (err)
 		return err;
 
@@ -553,11 +554,13 @@ module_exit(devfreq_exit);
  *			     freq value given to target callback.
  * @dev		The devfreq user device. (parent of devfreq)
  * @freq	The frequency given to target function
+ * @flags	Flags handed from devfreq framework.
  *
  */
-struct opp *devfreq_recommended_opp(struct device *dev, unsigned long *freq)
+struct opp *devfreq_recommended_opp(struct device *dev, unsigned long *freq,
+				    u32 flags)
 {
-	struct opp *opp = opp_find_freq_ceil(dev, freq);
+	struct opp *opp;
 
 	if (opp == ERR_PTR(-ENODEV))
 		opp = opp_find_freq_floor(dev, freq);
