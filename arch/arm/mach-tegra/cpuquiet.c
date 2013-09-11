@@ -41,7 +41,7 @@
 
 #define INITIAL_STATE		TEGRA_CPQ_DISABLED
 #define UP_DELAY_MS		70
-#define DOWN_DELAY_MS		2000
+#define DOWN_DELAY_MS		200
 
 static struct mutex *tegra_cpu_lock;
 static DEFINE_MUTEX(tegra_cpq_lock_stats);
