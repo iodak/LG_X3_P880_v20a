@@ -869,23 +869,14 @@ static int nvhost_pod_init(struct devfreq *df)
 	podgov->p_adjust = 0;
 	podgov->block = 0;
 	podgov->p_use_throughput_hint = 1;
-	if (tegra_get_chipid() == TEGRA_CHIPID_TEGRA11) {
-		podgov->idle_min = podgov->p_idle_min = 400;
-		podgov->idle_max = podgov->p_idle_max = 500;
-		podgov->p_hint_lo_limit = 750;
-		podgov->p_hint_hi_limit = 995;
-		podgov->p_scaleup_limit = 1650;
-		podgov->p_scaledown_limit = 1750;
-		podgov->p_smooth = 11;
-	} else {
-		podgov->idle_min = podgov->p_idle_min = 100;
-		podgov->idle_max = podgov->p_idle_max = 150;
-		podgov->p_hint_lo_limit = 800;
-		podgov->p_hint_hi_limit = 1015;
-		podgov->p_scaleup_limit = 1275;
-		podgov->p_scaledown_limit = 1475;
-		podgov->p_smooth = 7;
-	}
+	podgov->idle_min = podgov->p_idle_min = 100;
+	podgov->idle_max = podgov->p_idle_max = 150;
+	podgov->p_hint_lo_limit = 800;
+	podgov->p_hint_hi_limit = 1015;
+	podgov->p_scaleup_limit = 1275;
+	podgov->p_scaledown_limit = 1475;
+	podgov->p_smooth = 7;
+	
 	podgov->p_estimation_window = 10000;
 	podgov->adjustment_type = ADJUSTMENT_DEVICE_REQ;
 
