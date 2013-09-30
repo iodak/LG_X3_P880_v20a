@@ -53,10 +53,10 @@
 #define XMM6260_GPIO_IPC_HSIC_ACTIVE		CP2AP_ACK1_HOST_ACTIVE
 #define XMM6260_GPIO_IPC_HSIC_SUS_REQ		AP2CP_ACK2_SUSPEND_REQ
 
-static int x3_usb_hsic_postsuspend(void);
-static int x3_usb_hsic_preresume(void);
-static int x3_usb_hsic_phy_ready(void);
-static int x3_usb_hsic_phy_off(void);
+static void x3_usb_hsic_postsuspend(void);
+static void x3_usb_hsic_preresume(void);
+static void x3_usb_hsic_phy_ready(void);
+static void x3_usb_hsic_phy_off(void);
 
 
 struct baseband_power_platform_data tegra_baseband_power_data = {
@@ -147,30 +147,28 @@ static struct tegra_ehci_platform_data tegra_ehci_uhsic_pdata = {
 };
 */
 
-static int x3_usb_hsic_postsuspend(void)
+static void x3_usb_hsic_postsuspend(void)
 {
 	pr_debug("%s\n", __func__);
 #ifdef CONFIG_TEGRA_BB_XMM_POWER
 	baseband_xmm_set_power_status(BBXMM_PS_L2);
 #endif
-	return 0;
 }
 
 
-static int x3_usb_hsic_preresume(void)
+static void x3_usb_hsic_preresume(void)
 {
 	pr_debug("%s\n", __func__);
 #ifdef CONFIG_TEGRA_BB_XMM_POWER
 	baseband_xmm_set_power_status(BBXMM_PS_L2TOL0);
 #endif
-	return 0;
 }
 
 //                                             
 #ifdef CONFIG_TEGRA_BB_MODEM4
 extern int rmc_usb_hsic_phy_ready(void);
 #endif
-static int x3_usb_hsic_phy_ready(void)
+static void x3_usb_hsic_phy_ready(void)
 {
 	pr_debug("%s\n", __func__);
 #if defined(CONFIG_TEGRA_BB_XMM_POWER)
@@ -178,17 +176,15 @@ static int x3_usb_hsic_phy_ready(void)
 #elif defined(CONFIG_TEGRA_BB_MODEM4)
 	rmc_usb_hsic_phy_ready();
 #endif
-	return 0;
 }
 //                                             
 
-static int x3_usb_hsic_phy_off(void)
+static void x3_usb_hsic_phy_off(void)
 {
 	pr_debug("%s\n", __func__);
 #ifdef CONFIG_TEGRA_BB_XMM_POWER
 	baseband_xmm_set_power_status(BBXMM_PS_L3);
 #endif
-	return 0;
 }
 
 struct platform_device *tegra_usb_hsic_host_register(void)
