@@ -309,8 +309,6 @@ static void power_on_host(struct nvhost_device *dev)
 {
 	struct nvhost_master *host = nvhost_get_drvdata(dev);
 	nvhost_syncpt_reset(&host->syncpt);
-	if (tickctrl_op().init_host)
-		tickctrl_op().init_host(host);
 }
 
 static int power_off_host(struct nvhost_device *dev)
