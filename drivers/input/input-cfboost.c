@@ -51,7 +51,7 @@ MODULE_LICENSE("GPL v2");
 static struct pm_qos_request_list freq_req, core_req;
 static struct work_struct boost;
 static struct delayed_work unboost;
-static unsigned int boost_freq; /* kHz */
+static unsigned int boost_freq = 750000; /* kHz */
 module_param(boost_freq, uint, 0644);
 static unsigned long boost_time = 250; /* ms */
 module_param(boost_time, ulong, 0644);
