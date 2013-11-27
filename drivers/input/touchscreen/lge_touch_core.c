@@ -82,8 +82,8 @@ struct lge_touch_attribute {
 
 bool suspended = false;
 unsigned int irq_wake;
-unsigned int s2w_double_tap_duration = 150; /* msecs */
-unsigned int s2w_double_tap_threshold = 300;  /* msecs */
+unsigned int min_time = 150; /* msecs */
+unsigned int max_time = 300;  /* msecs */
 static cputime64_t tapTime;
 static cputime64_t tooLongTime;
 cputime64_t now;
@@ -1305,15 +1305,15 @@ static void touch_work_func_b(struct work_struct *work)
 	if (suspended && doubletap_to_wake){
 	
 		ts->ts_data.state = ABS_PRESS;
-		pr_info("double_tap_to_wake: diff= %lld\n", diff);
 		now = ktime_to_ms(ktime_get());
 		diff = cputime64_sub(now, touch_time);
-		tapTime = s2w_double_tap_duration;
-		tooLongTime = s2w_double_tap_threshold;
+		pr_info("Touchscreen DT2W: diff= %lld\n", diff);
+		tapTime = min_time;
+		tooLongTime = max_time;
 
 		if (diff > tapTime && diff < tooLongTime)
 				{
-				pr_info("double_tap_to_wake: wakeup!\n");
+				pr_info("Touchscreen DT2W: Wakeup!\n");
 				input_event(double_tap_pwrdev, EV_KEY, KEY_POWER, 1);
 				input_event(double_tap_pwrdev, EV_SYN, 0, 0);
 				msleep(100);
