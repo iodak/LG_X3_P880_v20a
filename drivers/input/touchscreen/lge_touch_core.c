@@ -83,7 +83,7 @@ struct lge_touch_attribute {
 bool suspended = false;
 unsigned int irq_wake;
 unsigned int min_time = 150; /* msecs */
-unsigned int max_time = 300;  /* msecs */
+unsigned int max_time = 600;  /* msecs */
 static cputime64_t tapTime;
 static cputime64_t tooLongTime;
 cputime64_t now;
