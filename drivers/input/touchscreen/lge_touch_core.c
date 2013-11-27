@@ -81,7 +81,7 @@ struct lge_touch_attribute {
 };
 
 bool suspended = false;
-
+unsigned int irq_wake;
 unsigned int s2w_double_tap_duration = 150; /* msecs */
 unsigned int s2w_double_tap_threshold = 300;  /* msecs */
 static cputime64_t tapTime;
@@ -3015,8 +3015,10 @@ static void touch_early_suspend(struct early_suspend *h)
 
 	if (doubletap_to_wake)
 	{
-		enable_irq_wake(ts->client->irq);
-		release_all_ts_event(ts);
+		if (!enable_irq_wake(ts->client->irq)){
+			pr_info("Touchscreen DT2W: enable_irq_wake\n");
+			irq_wake = 1;
+		}
 	}
 	else 
 	{
@@ -3055,7 +3057,11 @@ static void touch_late_resume(struct early_suspend *h)
 
 	if (doubletap_to_wake){
 
-		disable_irq_wake(ts->client->irq);
+		if (irq_wake){
+			irq_wake = 0;
+			disable_irq_wake(ts->client->irq);
+		}
+
 
 		/* Interrupt pin check after IC init - avoid Touch lockup */
 		if(ts->pdata->role->operation_mode == INTERRUPT_MODE){
