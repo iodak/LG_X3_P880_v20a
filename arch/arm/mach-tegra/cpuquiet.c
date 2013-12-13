@@ -643,8 +643,8 @@ static const struct file_operations hp_stats_fops = {
 };
 
 
-struct pm_qos_request min_cpu_req;
-struct pm_qos_request max_cpu_req;
+struct pm_qos_request_list min_cpu_req;
+struct pm_qos_request_list max_cpu_req;
 
 static int min_cpus_get(void *data, u64 *val)
 {
