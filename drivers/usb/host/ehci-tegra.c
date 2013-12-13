@@ -163,7 +163,7 @@ static irqreturn_t tegra_ehci_irq(struct usb_hcd *hcd)
 		spin_unlock(&ehci->lock);
 		return irq_status;
 	}
-	if (tegra_usb_phy_remote_wakeup(tegra->phy)) {
+	if (tegra_usb_phy_pmc_wakeup(tegra->phy)) {
 		ehci_info(ehci, "remote wakeup detected\n");
 		usb_hcd_resume_root_hub(hcd);
 		spin_unlock(&ehci->lock);
