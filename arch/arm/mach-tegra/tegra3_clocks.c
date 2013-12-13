@@ -320,7 +320,7 @@
 #ifdef CONFIG_MACH_X3
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #define EARLY_SUSPEND_MIN_CPU_FREQ	51000000
-#define ACTIVE_MIN_CPU_FREQ		102000000
+#define ACTIVE_MIN_CPU_FREQ		51000000
 #define SCLK_MIN_FREQ			12000000
 static struct cpufreq_frequency_table *selected_cpufreq_table;
 #else

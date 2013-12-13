@@ -42,7 +42,7 @@
  */
 
 #define CPU_WAKE_FREQ_HIGH	204000
-#define CPU_WAKE_FREQ_LOW	102000
+#define CPU_WAKE_FREQ_LOW	51000
 enum tegra_suspend_mode {
 	TEGRA_SUSPEND_NONE = 0,
 	TEGRA_SUSPEND_LP2,	/* CPU voltage off */
