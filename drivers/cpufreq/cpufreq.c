@@ -819,9 +819,9 @@ static ssize_t store_gpu_oc(struct cpufreq_policy *policy, const char *buf, size
 	struct clk *shared_bus_user;
 	unsigned int freqs_new[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 	unsigned int freqs_0[9] = {200, 228, 275, 332, 380, 416, 416, 416, 416};
-	unsigned int freqs_1[9] = {200, 247, 304, 352, 437, 484, 484, 484, 484};
-	unsigned int freqs_2[9] = {200, 247, 304, 361, 446, 520, 520, 520, 520};
-	unsigned int freqs_3[9] = {200, 267, 304, 361, 446, 600, 600, 600, 600};
+	unsigned int freqs_1[9] = {200, 247, 304, 352, 380, 484, 484, 484, 484};
+	unsigned int freqs_2[9] = {200, 247, 304, 361, 408, 520, 520, 520, 520};
+	unsigned int freqs_3[9] = {200, 267, 304, 361, 412, 600, 600, 600, 600};
 	unsigned int stock_pll_freqs[9] = {533, 667, 667, 800, 800, 1066, 1066, 1066, 1066};
 
 	ret = sscanf(buf, "%u", &freq);
