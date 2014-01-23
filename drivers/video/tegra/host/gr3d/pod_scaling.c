@@ -238,9 +238,13 @@ void nvhost_scale3d_suspend(struct nvhost_device *dev)
 
 static int podgov_is_enabled(struct device *dev)
 {
-	struct devfreq *df = to_devfreq(dev);
+	struct nvhost_device *d = to_nvhost_device(dev);
+	struct devfreq *df = d->power_manager;
 	struct podgov_info_rec *podgov;
 	int enable;
+
+	if (!df)
+		return 0;
 
 	mutex_lock(&df->lock);
 	podgov = df->data;
@@ -260,8 +264,12 @@ static int podgov_is_enabled(struct device *dev)
 
 static void podgov_enable(struct device *dev, int enable)
 {
-	struct devfreq *df = to_devfreq(dev);
+	struct nvhost_device *d = to_nvhost_device(dev);
+	struct devfreq *df = d->power_manager;
 	struct podgov_info_rec *podgov;
+
+	if (!df)
+		return;
 
 	mutex_lock(&df->lock);
 	podgov = df->data;
@@ -289,9 +297,8 @@ static void podgov_enable(struct device *dev, int enable)
 
 static int podgov_user_ctl(struct device *dev)
 {
-	struct platform_device *d = to_platform_device(dev);
-	struct nvhost_device_data *pdata = platform_get_drvdata(d);
-	struct devfreq *df = pdata->power_manager;
+	struct nvhost_device *d = to_nvhost_device(dev);
+	struct devfreq *df = d->power_manager;
 	struct podgov_info_rec *podgov;
 	int user;
 
@@ -316,9 +323,8 @@ static int podgov_user_ctl(struct device *dev)
 
 static void podgov_set_user_ctl(struct device *dev, int user)
 {
-	struct platform_device *d = to_platform_device(dev);
-	struct nvhost_device_data *pdata = platform_get_drvdata(d);
-	struct devfreq *df = pdata->power_manager;
+	struct nvhost_device *d = to_nvhost_device(dev);
+	struct devfreq *df = d->power_manager;
 	struct podgov_info_rec *podgov;
 
 	if (!df)
@@ -351,9 +357,8 @@ static void podgov_set_user_ctl(struct device *dev, int user)
 
 static int podgov_get_freq_request(struct device *dev)
 {
-	struct platform_device *d = to_platform_device(dev);
-	struct nvhost_device_data *pdata = platform_get_drvdata(d);
-	struct devfreq *df = pdata->power_manager;
+	struct nvhost_device *d = to_nvhost_device(dev);
+	struct devfreq *df = d->power_manager;
 	struct podgov_info_rec *podgov;
 	int freq_request;
 
@@ -377,9 +382,8 @@ static int podgov_get_freq_request(struct device *dev)
 
 static void podgov_set_freq_request(struct device *dev, int freq_request)
 {
-	struct platform_device *d = to_platform_device(dev);
-	struct nvhost_device_data *pdata = platform_get_drvdata(d);
-	struct devfreq *df = pdata->power_manager;
+	struct nvhost_device *d = to_nvhost_device(dev);
+	struct devfreq *df = d->power_manager;
 	struct podgov_info_rec *podgov;
 
 	if (!df)
@@ -1161,6 +1165,7 @@ err_alloc_podgov:
 static void nvhost_pod_exit(struct devfreq *df)
 {
 	struct podgov_info_rec *podgov = df->data;
+	struct nvhost_device *d = to_nvhost_device(df->dev.parent);
 
 	cancel_work_sync(&podgov->work);
 	cancel_delayed_work(&podgov->idle_timer);

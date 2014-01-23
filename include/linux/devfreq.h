@@ -76,7 +76,7 @@ struct devfreq_dev_profile {
 	unsigned long initial_freq;
 	unsigned int polling_ms;
 
-	int (*target)(struct device *dev, unsigned long *freq, u32 flags);
+	int (*target)(struct device *dev, unsigned long *freq);
 	int (*get_dev_status)(struct device *dev,
 			      struct devfreq_dev_status *stat);
 	void (*exit)(struct device *dev);
@@ -175,7 +175,7 @@ extern int devfreq_remove_device(struct devfreq *devfreq);
 
 /* Helper functions for devfreq user device driver with OPP. */
 extern struct opp *devfreq_recommended_opp(struct device *dev,
-					   unsigned long *freq, u32 flags);
+					   unsigned long *freq);
 extern int devfreq_register_opp_notifier(struct device *dev,
 					 struct devfreq *devfreq);
 extern int devfreq_unregister_opp_notifier(struct device *dev,
