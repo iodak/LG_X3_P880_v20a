@@ -6487,8 +6487,10 @@ static struct cfg80211_ops wl_cfg80211_ops = {
 	.set_channel = wl_cfg80211_set_channel,
 #endif /* !WL_CFG80211_P2P_DEV_IF && (LINUX_VERSION < VERSION(3, 6, 0)) */
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 4, 0)) && !0
+#if 0
 	.set_beacon = wl_cfg80211_add_set_beacon,
 	.add_beacon = wl_cfg80211_add_set_beacon,
+#endif
 #else
 	.change_beacon = wl_cfg80211_change_beacon,
 	.start_ap = wl_cfg80211_start_ap,
@@ -7029,19 +7031,19 @@ wl_notify_connect_status_ap(struct wl_priv *wl, struct net_device *ndev,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)) || 0
 		cfg80211_rx_mgmt(ndev, freq, 0, mgmt_frame, len, GFP_ATOMIC);
 #else
-		cfg80211_rx_mgmt(ndev, freq, mgmt_frame, len, GFP_ATOMIC);
+		cfg80211_rx_mgmt(ndev, freq, 0, mgmt_frame, len, GFP_ATOMIC);
 #endif 
 	} else if (event == WLC_E_DISASSOC_IND) {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)) || 0
 		cfg80211_rx_mgmt(ndev, freq, 0, mgmt_frame, len, GFP_ATOMIC);
 #else
-		cfg80211_rx_mgmt(ndev, freq, mgmt_frame, len, GFP_ATOMIC);
+		cfg80211_rx_mgmt(ndev, freq, 0, mgmt_frame, len, GFP_ATOMIC);
 #endif 
 	} else if ((event == WLC_E_DEAUTH_IND) || (event == WLC_E_DEAUTH)) {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)) || 0
 		cfg80211_rx_mgmt(ndev, freq, 0, mgmt_frame, len, GFP_ATOMIC);
 #else
-		cfg80211_rx_mgmt(ndev, freq, mgmt_frame, len, GFP_ATOMIC);
+		cfg80211_rx_mgmt(ndev, freq, 0, mgmt_frame, len, GFP_ATOMIC);
 #endif 
 	}
 
@@ -7984,7 +7986,7 @@ wl_notify_rx_mgmt_frame(struct wl_priv *wl, bcm_struct_cfgdev *cfgdev,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)) || 0
 	cfg80211_rx_mgmt(cfgdev, freq, 0, mgmt_frame, mgmt_frame_len, GFP_ATOMIC);
 #else
-	cfg80211_rx_mgmt(cfgdev, freq, mgmt_frame, mgmt_frame_len, GFP_ATOMIC);
+	cfg80211_rx_mgmt(cfgdev, freq, 0, mgmt_frame, mgmt_frame_len, GFP_ATOMIC);
 #endif 
 
 	WL_DBG(("mgmt_frame_len (%d) , e->datalen (%d), channel (%d), freq (%d)\n",
