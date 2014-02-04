@@ -53,12 +53,12 @@
 #define htodchanspec(i) htod16(i)
 #define dtohchanspec(i) dtoh16(i)
 #else
-#define htod32(i) (i)
-#define htod16(i) (i)
-#define dtoh32(i) (i)
-#define dtoh16(i) (i)
-#define htodchanspec(i) (i)
-#define dtohchanspec(i) (i)
+#define htod32(i) i
+#define htod16(i) i
+#define dtoh32(i) i
+#define dtoh16(i) i
+#define htodchanspec(i) i
+#define dtohchanspec(i) i
 #endif /* IL_BIGENDINA */
 
 #define NULL_CHECK(p, s, err)  \
@@ -91,9 +91,8 @@ is_dfs(uint16 channel)
 	else
 		return FALSE;
 }
-
-int
-dhd_pno_clean(dhd_pub_t *dhd)
+static int
+_dhd_pno_clean(dhd_pub_t *dhd)
 {
 	int pfn = 0;
 	int err;
@@ -127,9 +126,7 @@ _dhd_pno_suspend(dhd_pub_t *dhd)
 	dhd_pno_status_info_t *_pno_state;
 	NULL_CHECK(dhd, "dhd is NULL", err);
 	NULL_CHECK(dhd->pno_state, "pno_state is NULL", err);
-
 	DHD_PNO(("%s enter\n", __FUNCTION__));
-	_pno_state = PNO_GET_PNOSTATE(dhd);
 	err = dhd_iovar(dhd, 0, "pfn_suspend", (char *)&suspend, sizeof(suspend), 1);
 	if (err < 0) {
 		DHD_ERROR(("%s : failed to suspend pfn(error :%d)\n", __FUNCTION__, err));
@@ -767,7 +764,7 @@ dhd_pno_stop_for_ssid(dhd_pub_t *dhd)
 		dhd_pno_get_for_batch(dhd, NULL, 0, PNO_STATUS_DISABLE);
 		/* save current pno_mode before calling dhd_pno_clean */
 		mode = _pno_state->pno_mode;
-		dhd_pno_clean(dhd);
+		_dhd_pno_clean(dhd);
 		/* restore previous pno_mode */
 		_pno_state->pno_mode = mode;
 		if (_pno_state->pno_mode & DHD_PNO_BATCH_MODE) {
@@ -811,9 +808,9 @@ dhd_pno_stop_for_ssid(dhd_pub_t *dhd)
 			}
 		}
 	} else {
-		err = dhd_pno_clean(dhd);
+		err = _dhd_pno_clean(dhd);
 		if (err < 0) {
-			DHD_ERROR(("%s : failed to call dhd_pno_clean (err: %d)\n",
+			DHD_ERROR(("%s : failed to call _dhd_pno_clean (err: %d)\n",
 				__FUNCTION__, err));
 			goto exit;
 		}
@@ -1345,11 +1342,9 @@ convert_format:
 exit:
 	if (plbestnet)
 		MFREE(dhd->osh, plbestnet, PNO_BESTNET_LEN);
-	if (_params) {
-		_params->params_batch.get_batch.buf = NULL;
-		_params->params_batch.get_batch.bufsize = 0;
-		_params->params_batch.get_batch.bytes_written = err;
-	}
+	_params->params_batch.get_batch.buf = NULL;
+	_params->params_batch.get_batch.bufsize = 0;
+	_params->params_batch.get_batch.bytes_written = err;
 	mutex_unlock(&_pno_state->pno_mutex);
 	if (waitqueue_active(&_pno_state->get_batch_done.wait))
 		complete(&_pno_state->get_batch_done);
@@ -1446,7 +1441,7 @@ dhd_pno_stop_for_batch(dhd_pub_t *dhd)
 	_pno_state->pno_mode &= ~DHD_PNO_BATCH_MODE;
 	if (_pno_state->pno_mode & (DHD_PNO_LEGACY_MODE | DHD_PNO_HOTLIST_MODE)) {
 		mode = _pno_state->pno_mode;
-		dhd_pno_clean(dhd);
+		_dhd_pno_clean(dhd);
 		_pno_state->pno_mode = mode;
 		/* restart Legacy PNO if the Legacy PNO is on */
 		if (_pno_state->pno_mode & DHD_PNO_LEGACY_MODE) {
@@ -1510,9 +1505,9 @@ dhd_pno_stop_for_batch(dhd_pub_t *dhd)
 			}
 		}
 	} else {
-		err = dhd_pno_clean(dhd);
+		err = _dhd_pno_clean(dhd);
 		if (err < 0) {
-			DHD_ERROR(("%s : failed to call dhd_pno_clean (err: %d)\n",
+			DHD_ERROR(("%s : failed to call _dhd_pno_clean (err: %d)\n",
 				__FUNCTION__, err));
 			goto exit;
 		}
@@ -1705,9 +1700,9 @@ dhd_pno_stop_for_hotlist(dhd_pub_t *dhd)
 		dhd_pno_get_for_batch(dhd, NULL, 0, PNO_STATUS_DISABLE);
 		/* save current pno_mode before calling dhd_pno_clean */
 		mode = _pno_state->pno_mode;
-		err = dhd_pno_clean(dhd);
+		err = _dhd_pno_clean(dhd);
 		if (err < 0) {
-			DHD_ERROR(("%s : failed to call dhd_pno_clean (err: %d)\n",
+			DHD_ERROR(("%s : failed to call _dhd_pno_clean (err: %d)\n",
 				__FUNCTION__, err));
 			goto exit;
 		}
@@ -1757,9 +1752,9 @@ dhd_pno_stop_for_hotlist(dhd_pub_t *dhd)
 			}
 		}
 	} else {
-		err = dhd_pno_clean(dhd);
+		err = _dhd_pno_clean(dhd);
 		if (err < 0) {
-			DHD_ERROR(("%s : failed to call dhd_pno_clean (err: %d)\n",
+			DHD_ERROR(("%s : failed to call _dhd_pno_clean (err: %d)\n",
 				__FUNCTION__, err));
 			goto exit;
 		}
@@ -1821,8 +1816,8 @@ int dhd_pno_init(dhd_pub_t *dhd)
 	if (dhd->pno_state)
 		goto exit;
 	dhd->pno_state = MALLOC(dhd->osh, sizeof(dhd_pno_status_info_t));
-	NULL_CHECK(dhd->pno_state, "failed to create dhd_pno_state", err);
 	memset(dhd->pno_state, 0, sizeof(dhd_pno_status_info_t));
+	NULL_CHECK(dhd, "failed to create dhd_pno_state", err);
 	/* need to check whether current firmware support batching and hotlist scan */
 	_pno_state = PNO_GET_PNOSTATE(dhd);
 	_pno_state->wls_supported = TRUE;
@@ -1842,20 +1837,18 @@ exit:
 int dhd_pno_deinit(dhd_pub_t *dhd)
 {
 	int err = BCME_OK;
-	dhd_pno_status_info_t *_pno_state;
+	dhd_pno_status_info_t *_pno_state = PNO_GET_PNOSTATE(dhd);
 	dhd_pno_params_t *_params;
 	NULL_CHECK(dhd, "dhd is NULL", err);
-
 	DHD_PNO(("%s enter\n", __FUNCTION__));
-	_pno_state = PNO_GET_PNOSTATE(dhd);
-	NULL_CHECK(_pno_state, "pno_state is NULL", err);
 	if (_pno_state->pno_mode & DHD_PNO_BATCH_MODE) {
 		_params = &_pno_state->pno_params_arr[INDEX_OF_BATCH_PARAMS];
 		/* clear resource if the BATCH MODE is on */
 		_dhd_pno_reinitialize_prof(dhd, _params, DHD_PNO_BATCH_MODE);
 	}
 	cancel_work_sync(&_pno_state->work);
-	MFREE(dhd->osh, _pno_state, sizeof(dhd_pno_status_info_t));
+	if (dhd->pno_state)
+		MFREE(dhd->osh, dhd->pno_state, sizeof(dhd_pno_status_info_t));
 	dhd->pno_state = NULL;
 	return err;
 }
