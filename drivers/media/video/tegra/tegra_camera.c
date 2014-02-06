@@ -26,7 +26,7 @@
 #include <linux/uaccess.h>
 #include <linux/delay.h>
 #include <linux/cpufreq.h>
-#include <linux/pm_qos_params.h>  //                                                                                          
+#include <linux/pm_qos_params.h>                                         
 #include <mach/iomap.h>
 #include <mach/clk.h>
 #include <mach/powergate.h>
@@ -56,8 +56,8 @@ struct tegra_camera_dev {
 	bool power_save;
 	bool power_save_preview;
 	bool power_save_rec;
-	int xres;  //                                                                                          
-	int yres;  //                                                                                          
+	int xres;
+	int yres;
 	
 };
 
@@ -67,9 +67,7 @@ struct tegra_camera_block {
 	bool is_enabled;
 };
 
-int prev_cpus;
-
-//                                                                                          
+                                                                                          
 static struct tegra_camera_dev *tegra_camera_dev;
 /*
  * Declare and define two static variables to provide hint to
@@ -133,7 +131,7 @@ static int tegra_camera_enable_emc(struct tegra_camera_dev *dev)
 #ifdef CONFIG_ARCH_TEGRA_2x_SOC
 	clk_set_rate(dev->emc_clk, 300000000);
 #else
-	clk_set_rate(dev->emc_clk, 533000000);  //                                                                                   
+	clk_set_rate(dev->emc_clk, 533000000);
 #endif
 	return ret;
 }
@@ -361,9 +359,6 @@ static int tegra_camera_open(struct inode *inode, struct file *file)
 						misc_dev);
 	int ret = 0;
 
-//	prev_cpus = pm_qos_request(PM_QOS_MAX_ONLINE_CPUS);
-//	pr_info("[CAMERA] prev_cpus = %i \n", prev_cpus);
-
 	dev_info(dev->dev, "%s\n", __func__);
 
 	if (atomic_xchg(&dev->in_use, 1))
@@ -437,23 +432,13 @@ static int tegra_camera_clk_get(struct platform_device *pdev, const char *name,
 	return 0;
 }
 
-<<<<<<< HEAD
-=======
-//                                                                                          
-//#define POWER_SAVE_REC_CPU_USER_CAP_RATE	640000
 #define POWER_SAVE_BOOST_STEP			1
->>>>>>> parent of 9066bac... cpufreq: added stock 3.1 interactive from nexus7
 #define POWER_SAVE_CPU_FREQ_MIN			640000
 #define POWER_SAVE_CPU_FREQ_MAX			640000
 #define POWER_SAVE_MIN_CPUS			2
-<<<<<<< HEAD
-#define POWER_SAVE_MAX_CPUS			2                                                                               
-=======
 #define POWER_SAVE_MAX_CPUS			2
->>>>>>> parent of 7e30b36... removed LG core power save pluging for now
-//                                                                                          
+
 static unsigned long boost_step_default;
->>>>>>> parent of 9066bac... cpufreq: added stock 3.1 interactive from nexus7
 
 static inline void tegra_camera_do_power_save(struct tegra_camera_dev *dev)
 {
@@ -464,30 +449,20 @@ static inline void tegra_camera_do_power_save(struct tegra_camera_dev *dev)
 	rec = dev->power_save_rec;
 
 	if (!dev->power_save && (preview || rec)) {
-<<<<<<< HEAD
-=======
 		boost_step_default = cpufreq_interactive_get_boost_step();
->>>>>>> parent of 9066bac... cpufreq: added stock 3.1 interactive from nexus7
 		dev->power_save = true;
 	}
 
 	if (!dev->power_save)
 		return;
 
-<<<<<<< HEAD
-	if (!preview && rec) {
-		if (dev->xres >= 1280 && dev->yres >= 720){
-=======
 	if (preview && rec) {    
-    pr_info("%s : when preview && rec \n", __func__);
-		cpufreq_interactive_set_boost_step(POWER_SAVE_BOOST_STEP);
-//                                                                                          
-		//                                                                      
+    		pr_info("%s : when preview && rec \n", __func__);
+		cpufreq_interactive_set_boost_step(POWER_SAVE_BOOST_STEP);                                                                  
 		cpufreq_set_max_freq(NULL, POWER_SAVE_CPU_FREQ_MAX);
 		if ((dev->xres == 1280 && dev->yres == 720) ||
 			(dev->xres == 1440 && dev->yres == 1080) ||
-				(dev->xres == 1920 && dev->yres == 1080)) {
->>>>>>> parent of 9066bac... cpufreq: added stock 3.1 interactive from nexus7
+			(dev->xres == 1920 && dev->yres == 1080)) {
 			cpufreq_set_min_freq(NULL, POWER_SAVE_CPU_FREQ_MIN);
 //			tegra_auto_hotplug_set_min_cpus(POWER_SAVE_MIN_CPUS);
 //			tegra_auto_hotplug_set_max_cpus(0);
@@ -500,35 +475,19 @@ static inline void tegra_camera_do_power_save(struct tegra_camera_dev *dev)
 			}
 			                                                                                          
 	} else if (preview && !rec) {
-<<<<<<< HEAD
-	  	pr_info("%s : preview && !rec \n", __func__);                                                       
-=======
-	  pr_info("%s : preview && !rec \n", __func__);
+		pr_info("%s : preview && !rec \n", __func__);
 		cpufreq_interactive_set_boost_step(POWER_SAVE_BOOST_STEP);
-//                                                                                          
-		#if 0 //kwanghee.choi 20120912 Vu1.0 Global fix the frame drop on Camera by setting full CPU clock(start)
-		cpufreq_set_min_freq(NULL, POWER_SAVE_CPU_FREQ_MIN);
-		cpufreq_set_max_freq(NULL, PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
-		tegra_auto_hotplug_set_min_cpus(0);
-		tegra_auto_hotplug_set_max_cpus(0);
-		#else
->>>>>>> parent of 9066bac... cpufreq: added stock 3.1 interactive from nexus7
 		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 		cpufreq_set_max_freq(NULL, POWER_SAVE_CPU_FREQ_MAX);
 //		tegra_auto_hotplug_set_min_cpus(0);
 //		tegra_auto_hotplug_set_max_cpus(POWER_SAVE_MAX_CPUS);                                                            
 	} else if (!preview && !rec) {
-	  pr_info("%s : !preview && !rec \n", __func__);
-<<<<<<< HEAD
-=======
+		pr_info("%s : !preview && !rec \n", __func__);
 		cpufreq_interactive_set_boost_step(boost_step_default);
-//                                                                                          
->>>>>>> parent of 9066bac... cpufreq: added stock 3.1 interactive from nexus7
 		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 		cpufreq_set_max_freq(NULL, PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
 //		tegra_auto_hotplug_set_min_cpus(0);
-//		tegra_auto_hotplug_set_max_cpus(prev_cpus);
-		pr_info("[CAMERA] End of power save prev_cpus = %i \n", prev_cpus);
+//		tegra_auto_hotplug_set_max_cpus(POWER_SAVE_MAX_CPUS);                                                            
 		dev->power_save = false;
 	}
 }
