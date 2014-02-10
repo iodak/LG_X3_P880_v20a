@@ -821,7 +821,8 @@ static ssize_t store_gpu_oc(struct cpufreq_policy *policy, const char *buf, size
 	unsigned int freqs_0[9] = {200, 228, 275, 332, 380, 416, 416, 416, 416};
 	unsigned int freqs_1[9] = {200, 247, 304, 352, 380, 484, 484, 484, 484};
 	unsigned int freqs_2[9] = {200, 247, 304, 361, 408, 520, 520, 520, 520};
-	unsigned int freqs_3[9] = {200, 267, 304, 361, 412, 600, 600, 600, 600};
+	unsigned int freqs_3[9] = {200, 247, 304, 361, 412, 564, 564, 564, 564};
+	unsigned int freqs_4[9] = {200, 267, 304, 361, 412, 600, 600, 600, 600};
 	unsigned int stock_pll_freqs[9] = {533, 667, 667, 800, 800, 1066, 1066, 1066, 1066};
 
 	ret = sscanf(buf, "%u", &freq);
@@ -845,10 +846,15 @@ static ssize_t store_gpu_oc(struct cpufreq_policy *policy, const char *buf, size
 			for(i = 0; i < 9; i++)
 				freqs_new[i] = freqs_2[i];
 			break;
+		case 564:
+			voltage = 1200;
+			for(i = 0; i < 9; i++)
+				freqs_new[i] = freqs_3[i];
+			break;
 		case 600:
 			voltage = 1250;
 			for(i = 0; i < 9; i++)
-				freqs_new[i] = freqs_3[i];
+				freqs_new[i] = freqs_4[i];
 			break;
 		default:
 			voltage = 1200;
