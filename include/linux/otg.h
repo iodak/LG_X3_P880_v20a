@@ -1,5 +1,5 @@
 /*
-* Author: Chad Froebel <chadfroebel@gmail.com>
+* Author: Ivan Odak <o93.ivan@gmail.com>
 *
 * This software is licensed under the terms of the GNU General Public
 * License version 2, as published by the Free Software Foundation, and
@@ -13,8 +13,8 @@
 */
 
 
-#ifndef _LINUX_FASTCHG_H
-#define _LINUX_FASTCHG_H
+#ifndef _LINUX_OTG_H
+#define _LINUX_OTG_H
 
 extern void otg_switch (bool enable);
 
