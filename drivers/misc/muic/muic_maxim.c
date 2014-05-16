@@ -50,7 +50,6 @@
 
 #include <linux/fastchg.h>
 
-
 //                                           
 extern int muic_send_cable_type(TYPE_MUIC_MODE mode);
 
@@ -249,6 +248,21 @@ void set_max14526_muic_mode(unsigned char int_stat_value)
 			set_max14526_cp_uart_mode();
 			muic_mode = MUIC_CP_UART;
 			charging_mode = CHARGING_NONE;
+		} else if ((int_stat_value & IDNO) == IDNO_0000) {
+			/* muic_proc_set_ap_usb */
+
+			muic_i2c_write_byte(INT_STAT, 0x1B);
+			muic_i2c_write_byte(SW_CONTROL, OPEN);
+
+			dp3t_switch_ctrl(DP3T_NC);
+			muic_mdelay(100);
+			usif_switch_ctrl(USIF_AP);
+			dp3t_switch_ctrl(DP3T_AP_UART);
+
+			muic_i2c_write_byte(SW_CONTROL, DP_USB | DM_USB);
+
+			muic_mode = MUIC_AP_USB;
+			charging_mode = CHARGING_OTG;
 		} else {
 			muic_mode = MUIC_UNKNOWN;
 			charging_mode = CHARGING_NONE;
@@ -383,6 +397,10 @@ s32 muic_max14526_detect_accessory(s32 upon_irq)
 	case MUIC_CP_UART :
 	case MUIC_AP_USB :
 	case MUIC_CP_USB :
+		if ((int_stat_value & IDNO) == IDNO_0000) {
+			pr_info("MUIC_MAXIM OTG: Accessory detection: RET=101\n");
+			return 101;
+		}
 		if ((int_stat_value & V_VBUS) != 0) {					// V_VBUS == 1
 			set_max14526_muic_mode(int_stat_value);
 		} else if ((int_stat_value & IDNO) == IDNO_1011) {	// V_VBUS == 0
@@ -426,9 +444,6 @@ s32 muic_max14526_detect_accessory(s32 upon_irq)
 		gpio_set_value(IFX_USB_VBUS_EN_GPIO, 0);
         printk(KERN_INFO "[MUIC] charging_ic_deactive()\n");
     }
-
-	//                                           
-	//                                                                                                   
 
 	return ret;
 }

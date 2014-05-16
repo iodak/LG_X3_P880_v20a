@@ -254,26 +254,26 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
 		dev_dbg(&chip->client->dev, "Charing enable..\n");
 
 		// Set fast charge current and timer
-		switch(chg_cable_type) {
+		switch(chip->chg_cable_type) {
 			case POWER_SUPPLY_TYPE_USB:
-				//                                                      
-				if( charging_mode != CHARGING_MHL ) {
-//                                                                          
-//                    
-#if defined(CONFIG_MACH_VU10) || defined(CONFIG_MACH_X3)
-					if (current_limit_request == CURRENT_LIMIT_400MA) {
-						reg_val = ((chip->pdata->chgcc_400 << MAX8971_CHGCC_SHIFT) |
-								(chip->pdata->fchgtime<<MAX8971_FCHGTIME_SHIFT));
-					} else
-#endif
-//                                                                          
-					{
-						reg_val = ((chip->pdata->chgcc_usb500 << MAX8971_CHGCC_SHIFT) |
-								(chip->pdata->fchgtime<<MAX8971_FCHGTIME_SHIFT));
-					}
-				} else {
-					reg_val = ((chip->pdata->chgcc_mhl400 << MAX8971_CHGCC_SHIFT) |
-							(chip->pdata->fchgtime<<MAX8971_FCHGTIME_SHIFT));
+				switch (charging_mode) {
+					case CHARGING_MHL:
+						/* MHL needs max 400mA */
+						reg_val = ((chip->pdata->chgcc_mhl400 << MAX8971_CHGCC_SHIFT) |
+								(chip->pdata->fchgtime << MAX8971_FCHGTIME_SHIFT));
+						break;
+					case CHARGING_OTG:
+						reg_val = ((chip->pdata->chgcc_factory << MAX8971_CHGCC_SHIFT) |
+								(chip->pdata->fchgtime << MAX8971_FCHGTIME_SHIFT));
+						break;
+					default:
+						if (current_limit_request == CURRENT_LIMIT_400MA)
+							reg_val = ((chip->pdata->chgcc_400 << MAX8971_CHGCC_SHIFT) |
+									(chip->pdata->fchgtime<<MAX8971_FCHGTIME_SHIFT));
+						else
+							reg_val = ((chip->pdata->chgcc_usb500 << MAX8971_CHGCC_SHIFT) |
+									(chip->pdata->fchgtime<<MAX8971_FCHGTIME_SHIFT));
+						break;
 				}
 				break;
 
@@ -324,13 +324,19 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
 		// Set input current limit and charger restart threshold
 		switch(chg_cable_type) {
 			case POWER_SUPPLY_TYPE_USB:
-				//                                                      
-				if( charging_mode != CHARGING_MHL ) {
-				reg_val = ((chip->pdata->chgrstrt << MAX8971_CHGRSTRT_SHIFT) |
-				(chip->pdata->dcilmt_usb500 << MAX8971_DCILMT_SHIFT));
-				} else {
-					reg_val = ((chip->pdata->chgrstrt << MAX8971_CHGRSTRT_SHIFT) |
-					(chip->pdata->dcilmt_mhl400 << MAX8971_DCILMT_SHIFT));
+				switch (charging_mode) {
+					case CHARGING_MHL:
+						reg_val = ((chip->pdata->chgrstrt << MAX8971_CHGRSTRT_SHIFT) |
+							   (chip->pdata->dcilmt_mhl400 << MAX8971_DCILMT_SHIFT));
+						break;
+					case CHARGING_OTG:
+						reg_val = ((chip->pdata->chgrstrt << MAX8971_CHGRSTRT_SHIFT) |
+							   (chip->pdata->dcilmt_factory << MAX8971_DCILMT_SHIFT));
+						break;
+					default:
+						reg_val = ((chip->pdata->chgrstrt << MAX8971_CHGRSTRT_SHIFT) |
+							   (chip->pdata->dcilmt_usb500 << MAX8971_DCILMT_SHIFT));
+						break;
 				}
 				break;
 			case POWER_SUPPLY_TYPE_FORCED:
@@ -369,20 +375,27 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
 #endif
 		switch(chg_cable_type) {
 			case POWER_SUPPLY_TYPE_USB:
-				//                                                      
-				if( charging_mode != CHARGING_MHL ) {
-				reg_val = ((chip->pdata->topofftime << MAX8971_TOPOFFTIME_SHIFT) |
-				(chip->pdata->topofftshld << MAX8971_TOPOFFTSHLD_SHIFT) |
-				(chip->pdata->chgcv << MAX8971_CHGCV_SHIFT) |
-				(chip->pdata->ifst2p8_usb500 << MAX8971_IFST2P8_SHIFT));
-				} else {
-					reg_val = ((chip->pdata->topofftime << MAX8971_TOPOFFTIME_SHIFT) |
-					(chip->pdata->topofftshld << MAX8971_TOPOFFTSHLD_SHIFT) |
-					(chip->pdata->chgcv << MAX8971_CHGCV_SHIFT) |
-					(chip->pdata->ifst2p8_mhl400 << MAX8971_IFST2P8_SHIFT));
+				switch (charging_mode) {
+					case CHARGING_MHL:
+						reg_val = ((chip->pdata->topofftime << MAX8971_TOPOFFTIME_SHIFT) |
+							   (chip->pdata->topofftshld << MAX8971_TOPOFFTSHLD_SHIFT) |
+							   (chip->pdata->chgcv << MAX8971_CHGCV_SHIFT) |
+							   (chip->pdata->ifst2p8_mhl400 << MAX8971_IFST2P8_SHIFT));
+						break;
+					case CHARGING_OTG:
+						reg_val = ((chip->pdata->topofftime << MAX8971_TOPOFFTIME_SHIFT) |
+							   (chip->pdata->topofftshld << MAX8971_TOPOFFTSHLD_SHIFT) |
+							   (chip->pdata->chgcv << MAX8971_CHGCV_SHIFT) |
+							   (chip->pdata->ifst2p8_factory << MAX8971_IFST2P8_SHIFT));
+						break;
+					default:
+						reg_val = ((chip->pdata->topofftime << MAX8971_TOPOFFTIME_SHIFT) |
+							   (chip->pdata->topofftshld << MAX8971_TOPOFFTSHLD_SHIFT) |
+							   (chip->pdata->chgcv << MAX8971_CHGCV_SHIFT) |
+							   (chip->pdata->ifst2p8_usb500 << MAX8971_IFST2P8_SHIFT));
+						break;
 				}
 				break;
-			case POWER_SUPPLY_TYPE_FORCED:
 			case POWER_SUPPLY_TYPE_MAINS:
 				reg_val = ((chip->pdata->topofftime << MAX8971_TOPOFFTIME_SHIFT) |
 				(chip->pdata->topofftshld << MAX8971_TOPOFFTSHLD_SHIFT) |
@@ -761,11 +774,19 @@ EXPORT_SYMBOL(max8971_start_charging);
 
 static int max8971_is_charging(struct max8971_chip *info)
 {
+	int ret = 0;
+
 	if (info == NULL) {
 		printk(KERN_ERR "info object is not initialized..\n");
 		return 0;
 	}
 
+	if (charging_mode != CHARGING_OTG)
+		ret = max8971_read_reg(info->client, MAX8971_REG_CHG_STAT);
+	if (ret)
+		info->chg_online = (ret & MAX8971_DCUVP_MASK) ? 0 : 1;
+
+	dev_info(&info->client->dev, "POSTCHECK - charging online = %d\n", info->chg_online);
 	dev_dbg(&info->client->dev, "charging enable  = %d\n", info->chg_enable);
 	dev_dbg(&info->client->dev, "charging current = %d\n", info->chg_cable_type);
 	dev_dbg(&info->client->dev, "charging status  = %d\n", info->chg_status);
@@ -783,6 +804,9 @@ int max8971_is_charging_enable(void)
 	//if (max8971_chg->chg_online)
 	//	printk("[CHG] chg_online is %d\n", max8971_chg->chg_online);
 
+	if (unlikely(charging_mode == CHARGING_OTG)) {
+		return 1;
+	}
 	if ((chg_dtls_val == MAX8971_CHG_DTLS_DONE) ||
 		(chg_dtls_val == MAX8971_CHG_DTLS_TIMER_FAULT) ||
 		(chg_dtls_val == MAX8971_CHG_DTLS_TEMP_SUSPEND) ||
@@ -819,11 +843,36 @@ static int max8971_enable_charging(struct max8971_chip *info, bool enable)
 	if (enable) {
 		switch (info->chg_cable_type) {
 			case POWER_SUPPLY_TYPE_USB:
-				//                                                      
-				if( charging_mode != CHARGING_MHL )
-				printk("cable type is POWER_SUPPLY_TYPE_USB\n");
-				else
-					printk("cable type is POWER_SUPPLY_TYPE_USB(MHL)\n");
+				switch (charging_mode) {
+					case CHARGING_MHL:
+						pr_info("Cable type is POWER_SUPPLY_TYPE_USB(MHL)\n");
+						break;
+					case CHARGING_OTG:
+						pr_info("Cable type is POWER_SUPPLY_TYPE_USB(OTG)\n");
+						{
+							chg_flag_muic = 1;
+
+							u8 val[3];
+							val[0] = max8971_read_reg(info->client, MAX8971_REG_CHG_STAT);
+							val[1] = max8971_read_reg(info->client, MAX8971_REG_DETAILS1);
+							val[2] = max8971_read_reg(info->client, MAX8971_REG_DETAILS2);
+
+							max8971_write_reg(info->client, MAX8971_REG_PROTCMD, 0xC0);
+							max8971_write_reg(info->client, MAX8971_REG_CHGINT_MASK,info->pdata->int_mask);
+							max8971_write_reg(info->client, MAX8971_REG_TOPOFF, 0x62);
+
+							info->chg_online = 1;
+
+							max8971_set_bits(info->client, MAX8971_REG_CHGCNTL1, MAX8971_USB_SUS_MASK, 0);
+							cancel_delayed_work(&info->monitor_work);
+							schedule_delayed_work(&info->monitor_work, 2*HZ);
+
+						}
+						break;
+					default:
+						pr_info("Cable type is POWER_SUPPLY_TYPE_USB\n");
+						break;
+				}
 				max8971_set_reg(info, enable);
 				info->chg_enable = true;
 				info->chg_status = POWER_SUPPLY_STATUS_CHARGING;

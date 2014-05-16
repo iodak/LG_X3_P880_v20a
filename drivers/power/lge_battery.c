@@ -472,21 +472,18 @@ static void lge_battery_get_adc_info(struct lge_battery_info *info)
 		dev_err(info->dev, "%s: can not get adc info\n", __func__);
 		return;
 	}
-	if(info->online == POWER_SUPPLY_TYPE_FACTORY) {
-		info->bat_temp = 0;
-	}
-	else {
-		psy->get_property(psy, POWER_SUPPLY_PROP_TEMP_ADC, &value);
-		batt_ADC_value = value.intval;
-		info->bat_temp_adc = batt_ADC_value;
-		DTEMP("batt_ADC_value is %d\n",batt_ADC_value);
-		batt_Temp_C = lge_battery_average_temp(lge_battery_reference_graph((s64)batt_ADC_value, battery_temp_graph, ARRAY_SIZE(battery_temp_graph)) / (TEMP_TIMES / 10));
+	psy->get_property(psy, POWER_SUPPLY_PROP_TEMP_ADC, &value);
+	batt_ADC_value = value.intval;
+	info->bat_temp_adc = batt_ADC_value;
+	DTEMP("batt_ADC_value is %d\n",batt_ADC_value);
+	batt_Temp_C = lge_battery_average_temp(lge_battery_reference_graph(
+						(s64)batt_ADC_value,
+						battery_temp_graph,
+						ARRAY_SIZE(battery_temp_graph)) / (TEMP_TIMES / 10));
 
-		info->bat_temp = batt_Temp_C;
-		dev_dbg(info->dev, "info->bat_temp = %d\n", info->bat_temp);
-		//                                                         
-		lge_battery_state_temperature(info, info->bat_temp);
-	}
+	info->bat_temp = batt_Temp_C;
+	dev_dbg(info->dev, "info->bat_temp = %d\n", info->bat_temp);
+	lge_battery_state_temperature(info, info->bat_temp);
 
 	return;
 }
@@ -852,7 +849,8 @@ static int lge_battery_enable_charger(struct lge_battery_info *info, bool enable
 			case POWER_SUPPLY_TYPE_USB:
 #if RECORDING_OPERATE_SWITCH
 				//                                                                 
-				if((charging_mode != CHARGING_USB) && (charging_mode != CHARGING_FACTORY)) {
+				if((charging_mode != CHARGING_USB) && (charging_mode != CHARGING_FACTORY) &&
+				   (charging_mode != CHARGING_OTG)) {
 					if(info->camera_state == 49) {
 						if(info->bat_soc <= 11) {
 							info->camera_charging_switch = 1;
@@ -924,7 +922,6 @@ static int lge_battery_enable_charger(struct lge_battery_info *info, bool enable
 				info->pre_camera_state = info->camera_state;
 	            dev_info(info->dev,"%s : camera_state is %d , pre_camera_state is %d\n", info->camera_state, info->pre_camera_state);
 				}
-				//       
 #endif
 				val_type.intval = POWER_SUPPLY_STATUS_CHARGING;
 				val_chg_current.intval = info->online;
@@ -972,7 +969,14 @@ static void lge_battery_cable_work(struct work_struct *work)
 		case POWER_SUPPLY_TYPE_MAINS:
 		case POWER_SUPPLY_TYPE_USB:
 #if OTP_OPERATE_SWITCH
-			if((recharging_wait_temperature_state == DISCHARGING_ON) && (info->charging_status == POWER_SUPPLY_STATUS_CHARGING)){
+			if (unlikely(charging_mode == CHARGING_OTG)) {
+				if (!lge_battery_enable_charger(info, true))
+					info->charging_status = POWER_SUPPLY_STATUS_CHARGING;
+				break;
+			}
+
+			if ((recharging_wait_temperature_state == DISCHARGING_ON) && 
+			    (info->charging_status == POWER_SUPPLY_STATUS_CHARGING)) {
                                         info->charging_state_temp = lge_battery_enable_charger(info, false);
                                         info->charging_status  = POWER_SUPPLY_STATUS_DISCHARGING;
                                         printk("%s: Discharging cause of temperature (%s)\n", __func__,info->bat_health);
@@ -1012,8 +1016,9 @@ static void lge_battery_cable_work(struct work_struct *work)
 	power_supply_changed(&info->psy_bat);
 	return;
 }
-//                    
-#define FOR_MONITORING_TEMP_N_CURR 1 //                                                                                     
+
+#define FOR_MONITORING_TEMP_N_CURR 1
+
 
 #if FOR_MONITORING_TEMP_N_CURR
 extern int get_temp_for_log(long *pTemp);
@@ -1025,7 +1030,7 @@ static void lge_battery_monitor_work(struct work_struct *work)
 {
 	struct lge_battery_info *info = container_of(work, struct lge_battery_info,
 						 monitor_work);
-//                                                
+
 	static unsigned int old_bat_temp = 0;
 	static unsigned int old_bat_soc = 0;
 	static unsigned int chg_cnt_old= 0;
@@ -1157,8 +1162,11 @@ static void lge_battery_polling_work(struct work_struct *work)
 #endif
 	schedule_work(&info->monitor_work);
 #if OTP_OPERATE_SWITCH
-	if(info->online != POWER_SUPPLY_TYPE_BATTERY && info->online != POWER_SUPPLY_TYPE_FACTORY ){
-		if(recharging_wait_temperature_state == DISCHARGING_ON && info->charging_status == POWER_SUPPLY_STATUS_CHARGING){
+	if ((info->online != POWER_SUPPLY_TYPE_BATTERY) &&
+	    (info->online != POWER_SUPPLY_TYPE_FACTORY) &&
+	    (charging_mode != CHARGING_OTG)) {
+		if ((recharging_wait_temperature_state == DISCHARGING_ON) &&
+		    (info->charging_status == POWER_SUPPLY_STATUS_CHARGING)) {
 		info->cable_work_state = 1;
 		forced_cable_work_needed = 1;
 	}

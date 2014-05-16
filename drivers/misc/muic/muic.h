@@ -164,7 +164,8 @@ typedef enum {
 	CHARGING_INVALID_CHG,
 	CHARGING_USB,
 	CHARGING_FACTORY,
-	CHARGING_MHL,		//                                                      
+	CHARGING_MHL,
+	CHARGING_OTG,
 	CHARGING_MODE_NO,
 } TYPE_CHARGING_MODE;
 
@@ -240,10 +241,4 @@ extern void muic_set_mhl_mode_detect(void);
 #endif//
 
 #endif
-
-
-
-
-
-
 

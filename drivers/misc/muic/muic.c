@@ -24,7 +24,7 @@
 #include <linux/kernel.h>		/* printk() */
 #include <linux/init.h>			/* __init, __exit */
 #include <linux/uaccess.h>		/* copy_from/to_user() */
-#include <linux/interrupt.h>	/* request_irq() */
+#include <linux/interrupt.h>		/* request_irq() */
 #include <linux/irq.h>			/* set_irq_type() */
 #include <linux/types.h>		/* kernel data types */
 #include <asm/system.h>
@@ -43,7 +43,7 @@
 #include <linux/device.h>
 #include <linux/delay.h>		/* usleep() */
 #include <linux/proc_fs.h>
-#include <linux/workqueue.h>	/* INIT_WORK() */
+#include <linux/workqueue.h>		/* INIT_WORK() */
 #include <linux/wakelock.h>
 #include <linux/mutex.h>
 
@@ -61,6 +61,9 @@
 //jude84.kim
 #include "../../../arch/arm/mach-tegra/board.h"
 #include <mach/clk.h>
+
+#include <linux/otg.h>
+#include <linux/usb/otg.h>
 
 const char *retain_mode_str[] = {
 	"RETAIN_NO",
@@ -85,7 +88,7 @@ TYPE_MUIC_MODE muic_mode = MUIC_UNKNOWN;
 TYPE_CHARGING_MODE charging_mode = CHARGING_NONE;
 TYPE_UPON_IRQ  upon_irq  = NOT_UPON_IRQ;
 
-static TYPE_RETAIN_MODE retain_mode = RETAIN_NO;
+TYPE_RETAIN_MODE retain_mode = RETAIN_NO;
 static TYPE_RETAIN_MODE boot_retain_mode = RETAIN_NO;
 
 
@@ -95,16 +98,16 @@ const char *muic_mode_str[] = {
 	"MUIC_NA_TA",   		// 2
 	"MUIC_LG_TA",   		// 3
 	"MUIC_TA_1A", 	  		// 4
-	"MUIC_INVALID_CHG",  	// 5
+	"MUIC_INVALID_CHG",  		// 5
 	"MUIC_AP_UART",   		// 6
 	"MUIC_CP_UART",			// 7
 	"MUIC_AP_USB", 			// 8
 	"MUIC_CP_USB",			// 9
-	"MUIC_TV_OUT_NO_LOAD",	// 10
+	"MUIC_TV_OUT_NO_LOAD",		// 10
 	"MUIC_EARMIC",			// 11
 	"MUIC_TV_OUT_LOAD",		// 12
 	"MUIC_OTG",   			// 13
-	"MUIC_MHL",				// 14
+	"MUIC_MHL",			// 14
 	"MUIC_RESERVE1",		// 15
 	"MUIC_RESERVE2",		// 16
 };
@@ -120,16 +123,15 @@ const char *charging_mode_str[] = {
 	"CHARGING_INVALID_CHG",
 	"CHARGING_USB",
 	"CHARGING_FACTORY",
-	"CHARGING_MHL",		//                                                      
-
+	"CHARGING_MHL",
+	"CHARGING_OTG",
 };
 
 
 #if defined (MUIC_SLEEP)
 struct wake_lock muic_wake_lock;
 static char wake_lock_enable = 1;
-#endif//
-
+#endif
 
 void (*muic_init_device)(TYPE_RESET) = muic_init_unknown;
 s32 (*muic_detect_accessory)(s32) = muic_unknown_detect_accessory;
@@ -141,10 +143,29 @@ extern s32 muic_ts5usba33402_detect_accessory(s32 upon_irq);
 extern s32 muic_max14526_detect_accessory(s32 upon_irq);
 
 
-static s32 muic_proc_set_ap_uart(void);
-static s32 muic_proc_set_cp_uart(void);
-static s32 muic_proc_set_ap_usb(void);
-static s32 muic_proc_set_cp_usb(void);
+s32 muic_proc_set_ap_uart(void);
+s32 muic_proc_set_cp_uart(void);
+s32 muic_proc_set_ap_usb(void);
+s32 muic_proc_set_cp_usb(void);
+
+bool otg_mode;
+
+void otg_switch (bool enable)
+{
+	if (enable) {
+		pr_info("MUIC OTG: otg_switch enable\n");
+//		retain_mode = RETAIN_AP_USB;
+//		usb_host_status_notifier_func(1);
+		muic_proc_set_ap_usb();
+		otg_mode = 1;
+	} else {
+		pr_info("MUIC OTG: otg_switch disable\n");
+		retain_mode = RETAIN_NO;
+		usb_host_status_notifier_func(0);
+		otg_mode = 0;
+		queue_work(muic_wq, &muic_work);
+	}
+}
 
 #ifdef CONFIG_PROC_FS
 /*
@@ -310,7 +331,8 @@ static void muic_wakeup_lock(void)
 #endif
 			case CHARGING_USB:
 			case CHARGING_FACTORY:
-			case CHARGING_MHL:		//                                                      
+			case CHARGING_MHL:
+			case CHARGING_OTG:
 				wake_lock(&muic_wake_lock);
 				printk(KERN_INFO "[MUIC] wake_lock(): charging_mode = %s (%d)\n" , charging_mode_str[charging_mode], charging_mode);
 				break;
@@ -484,24 +506,31 @@ void check_charging_mode(void)
 {
 	s32 value;
 
+	if (otg_mode)
+		retain_mode = RETAIN_AP_USB;
+	else
+		retain_mode = RETAIN_NO;
+
+	pr_info("MUIC_OTG: check_charging_mode: retain_mode = %s (%d) \n", retain_mode_str[retain_mode], retain_mode);
+
 	value = i2c_smbus_read_byte_data(muic_client, INT_STAT);
 	if (value & V_VBUS) {
 		if ((value & IDNO) == IDNO_0010 || 
 			(value & IDNO) == IDNO_0100 ||
 			(value & IDNO) == IDNO_1001 ||
-			(value & IDNO) == IDNO_1010 ||
-			(boot_retain_mode == RETAIN_AP_USB && retain_mode == RETAIN_AP_USB))	//                                                                                                
+			(value & IDNO) == IDNO_1010
+			|| retain_mode == RETAIN_AP_USB)
 			charging_mode = CHARGING_FACTORY;
 		else if (value & CHGDET) 
 			charging_mode = CHARGING_LG_TA;
 		else
 			charging_mode = CHARGING_USB;
 	} else
-		charging_mode = CHARGING_NONE;
+		charging_mode = CHARGING_FACTORY;
 
 	check_cable_ID = cable_id_check(value);
 
-	//set_muic_charger_detected();	//not done here. Moved to other functions
+	pr_info("MUIC_OTG: check_charging_mode: charging_mode = %s (%d)\n" , charging_mode_str[charging_mode], charging_mode);
 }
 EXPORT_SYMBOL(check_charging_mode);
 
@@ -598,10 +627,15 @@ int muic_send_charger_type(TYPE_CHARGING_MODE mode)
 
 	switch (mode) {
 		case CHARGING_USB:
-		case CHARGING_MHL:		//                                                      
+		case CHARGING_MHL:
 			psy = power_supply_get_by_name("usb");
 			value.intval = POWER_SUPPLY_TYPE_USB;
-			chg_flag_muic = 1;		//                                                                                              
+			chg_flag_muic = 1;
+			break;
+
+		case CHARGING_OTG:
+			psy = power_supply_get_by_name("usb");
+			value.intval = POWER_SUPPLY_TYPE_USB;
 			break;
 
 		case CHARGING_NA_TA:
@@ -609,12 +643,14 @@ int muic_send_charger_type(TYPE_CHARGING_MODE mode)
 		case CHARGING_TA_1A:
 			psy = power_supply_get_by_name("ac");
 			value.intval = POWER_SUPPLY_TYPE_MAINS;
-			chg_flag_muic = 1;		//                                                                                              
+			chg_flag_muic = 1;
 			break;
 
 		case CHARGING_FACTORY:
 			psy = power_supply_get_by_name("factory");
 			value.intval = POWER_SUPPLY_TYPE_FACTORY;
+			if(otg_mode)
+				usb_host_status_notifier_func(1);
 			break;
 
 		case CHARGING_NONE:
@@ -769,7 +805,7 @@ void dp3t_switch_ctrl(TYPE_DP3T_MODE mode)
 EXPORT_SYMBOL(dp3t_switch_ctrl);
 
 
-static s32 muic_proc_set_ap_uart(void)
+s32 muic_proc_set_ap_uart(void)
 {
 	s32 ret;
 
@@ -791,7 +827,7 @@ static s32 muic_proc_set_ap_uart(void)
 }
 
 
-static s32 muic_proc_set_ap_usb(void)
+s32 muic_proc_set_ap_usb(void)
 {
 	s32 ret;
 
@@ -818,7 +854,7 @@ static s32 muic_proc_set_ap_usb(void)
 }
 
 
-static s32 muic_proc_set_cp_uart(void)
+s32 muic_proc_set_cp_uart(void)
 {
 	s32 ret;
 
@@ -839,7 +875,7 @@ static s32 muic_proc_set_cp_uart(void)
 	return ret;
 }
 
-static s32 muic_proc_set_cp_usb(void)
+s32 muic_proc_set_cp_usb(void)
 {
 	s32 ret;
 
@@ -927,8 +963,14 @@ static void muic_work_inside_operation (void) {
 
 	printk(KERN_INFO "[MUIC] muic_work_func(): retain_mode = %s (%d) \n", retain_mode_str[retain_mode], retain_mode);
 
-	if (retain_mode == RETAIN_NO) {
+	if (retain_mode ==  RETAIN_NO) {
 		ret = muic_detect_accessory(UPON_IRQ);
+		if (ret == 101) {
+			pr_info("MUIC_OTG: USB Host Mode cable detected\n");
+			i2c_smbus_write_byte_data(muic_client, INT_STAT, 0x1B);
+			muic_proc_set_ap_usb();
+			check_charging_mode();
+		}
 		set_muic_charger_detected();	//                      
 		printk(KERN_INFO "[MUIC] muic_detect_accessory(UPON_IRQ) result:  muic_mode = %s (%d), charing = %s (%d)\n", 
 		   	   muic_mode_str[muic_mode], muic_mode, charging_mode_str[charging_mode], charging_mode);
@@ -955,7 +997,7 @@ static void muic_work_func(struct work_struct *muic_work)
 
 static irqreturn_t muic_interrupt_handler(s32 irq, void *data)
 {
-	unsigned long flags;
+//	unsigned long flags;
 		
 	/* Make the interrupt on MUIC INT wake up OMAP which is in suspend mode */
 //	spin_lock_irqsave(&muic_spin_lock, flags);
@@ -1100,6 +1142,7 @@ static s32 __devinit muic_probe(struct i2c_client *client, const struct i2c_devi
 	muic_detect_device();
 
 	/* Initializes MUIC - Finally MUIC INT becomes enabled */
+#if 0
 	if (retain_mode == RETAIN_AP_USB) {
 		muic_proc_set_ap_usb();	//                                            
 		muic_mode = MUIC_AP_USB;
@@ -1113,10 +1156,10 @@ static s32 __devinit muic_probe(struct i2c_client *client, const struct i2c_devi
 		check_charging_mode();
 		printk("[MUIC] muic_detect_accessory... retain mode = CP_USB\n");
 	} else {
-
+#endif
 		muic_init_device(DEFAULT);	//                                                                      
 		muic_detect_accessory(NOT_UPON_IRQ);
-	}
+//	}
 
 	//                     
 	set_muic_charger_detected();
@@ -1262,4 +1305,3 @@ module_exit(muic_exit);
 MODULE_AUTHOR("LG Electronics");
 MODULE_DESCRIPTION("Cosmo MUIC Driver");
 MODULE_LICENSE("GPL");
-

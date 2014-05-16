@@ -68,6 +68,38 @@ struct tegra_otg_data {
 
 static struct tegra_otg_data *tegra_clone;
 
+static unsigned long enable_interrupt(struct tegra_otg_data *tegra, bool en);
+static void tegra_change_otg_state(struct tegra_otg_data *tegra,
+					enum usb_otg_state to);
+
+void usb_host_status_notifier_func(bool isEnable)
+{
+	unsigned long val;
+	if (isEnable) {
+		enable_interrupt(tegra_clone, false);
+		tegra_change_otg_state(tegra_clone, OTG_STATE_A_SUSPEND);
+		tegra_change_otg_state(tegra_clone, OTG_STATE_A_HOST);
+		tegra_clone->interrupt_mode = false;
+	} else {
+		tegra_clone->interrupt_mode = true;
+		tegra_change_otg_state(tegra_clone, OTG_STATE_A_SUSPEND);
+		val = enable_interrupt(tegra_clone, true);
+		if ((val & USB_ID_STATUS) && (val & USB_VBUS_STATUS))
+			val |= USB_VBUS_INT_STATUS;
+		else if (!(val & USB_ID_STATUS)) {
+			if (!tegra_clone->builtin_host)
+				val &= ~USB_ID_INT_STATUS;
+			else
+				val |= USB_ID_INT_STATUS;
+		} else
+			val &= ~(USB_ID_INT_STATUS | USB_VBUS_INT_STATUS);
+
+		if ((val & USB_ID_INT_STATUS) || (val & USB_VBUS_INT_STATUS)) {
+			tegra_clone->int_status = val;
+			schedule_work(&tegra_clone->work);
+		}
+	}
+}
 static inline unsigned long otg_readl(struct tegra_otg_data *tegra,
 				      unsigned int offset)
 {
