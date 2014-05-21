@@ -1468,6 +1468,9 @@ static void touch_work_func_b(struct work_struct *work)
 	switch(ts->ts_data.state){
 	case ABS_PRESS:
 abs_report:
+
+		input_event(ts->input_dev, EV_MSC, MSC_ACTIVITY, 1);
+
 		i=0;
 		while(ts->ts_data.total_num--) {
 			if (ts->ts_data.curr_data[ts->ts_data.total_num].y_position
@@ -1540,7 +1543,7 @@ abs_report:
 			ts->ts_data.prev_total_num = i;
 		}
 
-		ts->ts_data.total_num = 0;		
+		ts->ts_data.total_num = 0;
 
 		break;
 	case ABS_RELEASE:
@@ -1548,6 +1551,7 @@ abs_report:
 		break;
 	case BUTTON_PRESS:
 		if (!suspended)
+			input_event(ts->input_dev, EV_MSC, MSC_ACTIVITY, 1);
 			input_report_key(ts->input_dev, ts->ts_data.curr_button.key_code, BUTTON_PRESSED);
 				if (unlikely(touch_debug_mask & DEBUG_BUTTON))
 				TOUCH_INFO_MSG("Touch KEY[%d] is pressed\n", ts->ts_data.curr_button.key_code);
