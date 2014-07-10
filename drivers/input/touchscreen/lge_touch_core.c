@@ -110,6 +110,8 @@ struct timeval t_debug[TIME_PROFILE_MAX];
 #define MAX_GHOST_CHECK_COUNT	3
 #define MAX_I2C_RETRY_COUNT		5
 
+#define BOOST_FREQ 600000
+
 #if defined(CONFIG_HAS_EARLYSUSPEND)
 static void touch_early_suspend(struct early_suspend *h);
 static void touch_late_resume(struct early_suspend *h);
@@ -1482,21 +1484,26 @@ abs_report:
 			ts->ts_data.prev_total_num = i;
 		}
 
-		ts->ts_data.total_num = 0;		
+		ts->ts_data.total_num = 0;
+
+		cpufreq_set_min_freq(NULL, BOOST_FREQ);
 
 		break;
 	case ABS_RELEASE:
 		input_mt_sync(ts->input_dev);
+		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 		break;
 	case BUTTON_PRESS:
 		input_report_key(ts->input_dev, ts->ts_data.curr_button.key_code, BUTTON_PRESSED);
 			if (unlikely(touch_debug_mask & DEBUG_BUTTON))
 			TOUCH_INFO_MSG("Touch KEY[%d] is pressed\n", ts->ts_data.curr_button.key_code);
+		cpufreq_set_min_freq(NULL, BOOST_FREQ);
 		break;
 	case BUTTON_RELEASE:
 		input_report_key(ts->input_dev, ts->ts_data.prev_button.key_code, BUTTON_RELEASED);
 			if (unlikely(touch_debug_mask & DEBUG_BUTTON))
 			TOUCH_INFO_MSG("Touch KEY[%d] is released\n", ts->ts_data.prev_button.key_code);
+		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 		break;
 	case BUTTON_CANCEL:
 		input_report_key(ts->input_dev, ts->ts_data.prev_button.key_code, BUTTON_CANCLED);
@@ -1506,6 +1513,7 @@ abs_report:
 			input_sync(ts->input_dev);
 			goto abs_report;
 		}
+		cpufreq_set_min_freq(NULL, PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
 		break;
 	case TOUCH_BUTTON_LOCK:
 	case TOUCH_ABS_LOCK:
