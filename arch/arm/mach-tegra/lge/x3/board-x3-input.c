@@ -292,19 +292,19 @@ struct touch_device_caps touch_caps = {
 
 struct touch_operation_role touch_role = {
 	.operation_mode 	= INTERRUPT_MODE,
-	.key_type		= TOUCH_SOFT_KEY, /* rev.a : hard_key, rev.b : soft_key */
-	.report_mode		= REDUCED_REPORT_MODE,
-	.delta_pos_threshold 	= 5,
+	.key_type			= TOUCH_SOFT_KEY, /* rev.a : hard_key, rev.b : soft_key */
+	.report_mode			= 0,
+	.delta_pos_threshold 	= 0,
 	.orientation 		= 0,
-	.booting_delay 		= 200,
+	.booting_delay 			= 200,
 	.reset_delay		= 20,
 	.report_period		= 10000000, 	/* 12.5 msec -> 10.0 msec(X3) */
 	.suspend_pwr		= POWER_OFF,
 	.resume_pwr		= POWER_ON,
 	.jitter_filter_enable	= 1,
-	.jitter_curr_ratio	= 28,
+	.jitter_curr_ratio		= 28,
 	.accuracy_filter_enable	= 1,
-	.irqflags 		= IRQF_TRIGGER_FALLING,
+	.irqflags 				= IRQF_TRIGGER_FALLING,
 };
 
 struct touch_power_module touch_pwr = {
