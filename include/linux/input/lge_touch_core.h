@@ -390,7 +390,4 @@ extern u32 touch_debug_mask;
 extern u32 touch_time_debug_mask;
 extern u8  test_report_type;
 extern u8  test_report_status;
-
-extern void double_tap_setdev(struct input_dev *input_dev);
-
 #endif
